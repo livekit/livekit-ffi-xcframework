@@ -1,7 +1,7 @@
 # Generated from Rust template
 Pod::Spec.new do |spec|
   spec.name = "LiveKitUniFFI"
-  spec.version = "0.2.2"
+  spec.version = "0.3.0"
   spec.summary = "LiveKit UniFFI bindings"
   spec.description = <<-DESC
     LiveKit UniFFI XCFramework with Swift bindings
