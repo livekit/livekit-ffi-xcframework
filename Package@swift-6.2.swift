@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "LiveKitUniFFI",
+    name: "LiveKitFFI",
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
@@ -14,19 +14,19 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "LiveKitUniFFI",
-            targets: ["LiveKitUniFFI"]
+            name: "LiveKitFFI",
+            targets: ["LiveKitFFI"]
         )
     ],
     targets: [
         .target(
-            name: "LiveKitUniFFI",
-            dependencies: ["RustLiveKitUniFFI"]
+            name: "LiveKitFFI",
+            dependencies: ["RustLiveKitFFI"]
         ),
         .binaryTarget(
-            name: "RustLiveKitUniFFI",
-            url: "https://github.com/livekit/livekit-uniffi-xcframework/releases/download/0.3.0/RustLiveKitUniFFI.xcframework.zip",
-            checksum: "666956e7a29c5733d7c610108669a3e1fdc831e8c242582dee57c642c637952e"
+            name: "RustLiveKitFFI",
+            url: "https://github.com/livekit/livekit-uniffi-xcframework/releases/download/0.13.1/RustLiveKitFFI.xcframework.zip",
+            checksum: "9c6fca694df24f1206897c5787c001120c27e03a2b28688af76c83ea79a45805"
         )
     ],
     // Workaround for cargo-swift pinning uniffi_bindgen 0.31.1: its generated
