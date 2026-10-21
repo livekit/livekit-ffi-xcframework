@@ -45,7 +45,7 @@ jobs:
       - name: Publish
         uses: livekit/publish-cocoapod-action@089c62e30ff536886bac33f7e5dffb736ed27ed6 # main
         with:
-          podspec: LiveKitUniFFI.podspec
+          podspec: LiveKitFFI.podspec
           spec-repo: ${{ github.event.inputs.spec_repo || 'livekit/podspecs' }}
           dry-run: ${{ github.event_name != 'release' && github.event.inputs.dry_run != 'false' }}
           token: ${{ secrets.PODSPECS_PAT }}
