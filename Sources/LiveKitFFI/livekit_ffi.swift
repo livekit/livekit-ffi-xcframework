@@ -7,8 +7,8 @@ import Foundation
 // Depending on the consumer's build setup, the low-level FFI code
 // might be in a separate module, or it might be compiled inline into
 // this module. This is a bit of light hackery to work with both.
-#if canImport(RustLiveKitUniFFI)
-    import RustLiveKitUniFFI
+#if canImport(RustLiveKitFFI)
+    import RustLiveKitFFI
 #endif
 
 private extension RustBuffer {
@@ -25,13 +25,13 @@ private extension RustBuffer {
     }
 
     static func from(_ ptr: UnsafeBufferPointer<UInt8>) -> RustBuffer {
-        try! rustCall { ffi_livekit_uniffi_rustbuffer_from_bytes(ForeignBytes(bufferPointer: ptr), $0) }
+        try! rustCall { ffi_livekit_ffi_rustbuffer_from_bytes(ForeignBytes(bufferPointer: ptr), $0) }
     }
 
     /// Frees the buffer in place.
     /// The buffer must not be used after this is called.
     func deallocate() {
-        try! rustCall { ffi_livekit_uniffi_rustbuffer_free(self, $0) }
+        try! rustCall { ffi_livekit_ffi_rustbuffer_free(self, $0) }
     }
 }
 
@@ -283,7 +283,7 @@ private func makeRustCall<T>(
     _ callback: (UnsafeMutablePointer<RustCallStatus>) -> T,
     errorHandler: ((RustBuffer) throws -> some Swift.Error)?
 ) throws -> T {
-    uniffiEnsureLivekitUniffiInitialized()
+    uniffiEnsureLivekitFfiInitialized()
     var callStatus = RustCallStatus()
     let returnedVal = callback(&callStatus)
     try uniffiCheckCallStatus(callStatus: callStatus, errorHandler: errorHandler)
@@ -657,7 +657,7 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_bytestreamreader(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_bytestreamreader(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -668,7 +668,7 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_bytestreamreader(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_bytestreamreader(handle, $0) }
     }
 
     /**
@@ -676,7 +676,7 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
      */
     open func info() -> ByteStreamInfo {
         try! FfiConverterTypeByteStreamInfo_lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_bytestreamreader_info(
+            uniffi_livekit_ffi_fn_method_bytestreamreader_info(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -688,13 +688,13 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
     open func next() async throws -> Bytes? {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_bytestreamreader_next(
+                uniffi_livekit_ffi_fn_method_bytestreamreader_next(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeBytes.lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -706,13 +706,13 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
     open func readAll() async throws -> Bytes {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_bytestreamreader_read_all(
+                uniffi_livekit_ffi_fn_method_bytestreamreader_read_all(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeBytes_lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -828,7 +828,7 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_bytestreamwriter(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_bytestreamwriter(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -839,7 +839,7 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_bytestreamwriter(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_bytestreamwriter(handle, $0) }
     }
 
     /**
@@ -848,13 +848,13 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
     open func close() async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_bytestreamwriter_close(
+                uniffi_livekit_ffi_fn_method_bytestreamwriter_close(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -866,14 +866,14 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
     open func closeWithReason(reason: String) async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_bytestreamwriter_close_with_reason(
+                uniffi_livekit_ffi_fn_method_bytestreamwriter_close_with_reason(
                     self.uniffiCloneHandle(),
                     FfiConverterString.lower(reason)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -884,7 +884,7 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
      */
     open func info() -> ByteStreamInfo {
         try! FfiConverterTypeByteStreamInfo_lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_bytestreamwriter_info(
+            uniffi_livekit_ffi_fn_method_bytestreamwriter_info(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -896,13 +896,13 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
     open func isOpen() async -> Bool {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_bytestreamwriter_is_open(
+                uniffi_livekit_ffi_fn_method_bytestreamwriter_is_open(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_i8,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_i8,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_i8,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_i8,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_i8,
+            freeFunc: ffi_livekit_ffi_rust_future_free_i8,
             liftFunc: FfiConverterBool.lift,
             errorHandler: nil
         )
@@ -914,14 +914,14 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
     open func write(data: Bytes) async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_bytestreamwriter_write(
+                uniffi_livekit_ffi_fn_method_bytestreamwriter_write(
                     self.uniffiCloneHandle(),
                     FfiConverterTypeBytes_lower(data)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -1017,7 +1017,7 @@ open class DataTrackStream: DataTrackStreamProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_datatrackstream(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_datatrackstream(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -1028,7 +1028,7 @@ open class DataTrackStream: DataTrackStreamProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_datatrackstream(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_datatrackstream(handle, $0) }
     }
 
     /**
@@ -1037,13 +1037,13 @@ open class DataTrackStream: DataTrackStreamProtocol, @unchecked Sendable {
     open func next() async -> DataTrackFrame? {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_datatrackstream_next(
+                uniffi_livekit_ffi_fn_method_datatrackstream_next(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeDataTrackFrame.lift,
             errorHandler: nil
         )
@@ -1183,7 +1183,7 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_incomingdatastreammanager(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_incomingdatastreammanager(self.handle, $0) }
     }
 
     /**
@@ -1201,7 +1201,7 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
     public convenience init(delegate: IncomingDataStreamManagerDelegate, maxPayloadByteLength: UInt64?) {
         let handle =
             try! rustCall {
-                uniffi_livekit_uniffi_fn_constructor_incomingdatastreammanager_new(
+                uniffi_livekit_ffi_fn_constructor_incomingdatastreammanager_new(
                     FfiConverterTypeIncomingDataStreamManagerDelegate_lower(delegate),
                     FfiConverterOptionUInt64.lower(maxPayloadByteLength), $0
                 )
@@ -1215,7 +1215,7 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_incomingdatastreammanager(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_incomingdatastreammanager(handle, $0) }
     }
 
     /**
@@ -1225,7 +1225,7 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
      */
     open func abortAllStreams() {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingdatastreammanager_abort_all_streams(
+            uniffi_livekit_ffi_fn_method_incomingdatastreammanager_abort_all_streams(
                 self.uniffiCloneHandle(), $0
             )
         }
@@ -1237,7 +1237,7 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
      */
     open func abortStreamsFrom(identity: String) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingdatastreammanager_abort_streams_from(
+            uniffi_livekit_ffi_fn_method_incomingdatastreammanager_abort_streams_from(
                 self.uniffiCloneHandle(),
                 FfiConverterString.lower(identity), $0
             )
@@ -1259,7 +1259,7 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
      */
     open func handlePacketReceived(packet: Bytes, encryptionType: EncryptionType) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingdatastreammanager_handle_packet_received(
+            uniffi_livekit_ffi_fn_method_incomingdatastreammanager_handle_packet_received(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeBytes_lower(packet),
                 FfiConverterTypeEncryptionType_lower(encryptionType), $0
@@ -1279,13 +1279,13 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
     open func openStreamCount() async -> UInt64 {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_incomingdatastreammanager_open_stream_count(
+                uniffi_livekit_ffi_fn_method_incomingdatastreammanager_open_stream_count(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_u64,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_u64,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_u64,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_u64,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_u64,
+            freeFunc: ffi_livekit_ffi_rust_future_free_u64,
             liftFunc: FfiConverterUInt64.lift,
             errorHandler: nil
         )
@@ -1402,7 +1402,7 @@ open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDeleg
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_incomingdatastreammanagerdelegate(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_incomingdatastreammanagerdelegate(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -1413,7 +1413,7 @@ open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDeleg
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_incomingdatastreammanagerdelegate(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_incomingdatastreammanagerdelegate(handle, $0) }
     }
 
     /**
@@ -1421,7 +1421,7 @@ open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDeleg
      */
     open func onByteStreamOpened(reader: ByteStreamReader, identity: String) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingdatastreammanagerdelegate_on_byte_stream_opened(
+            uniffi_livekit_ffi_fn_method_incomingdatastreammanagerdelegate_on_byte_stream_opened(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeByteStreamReader_lower(reader),
                 FfiConverterString.lower(identity), $0
@@ -1434,7 +1434,7 @@ open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDeleg
      */
     open func onTextStreamOpened(reader: TextStreamReader, identity: String) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingdatastreammanagerdelegate_on_text_stream_opened(
+            uniffi_livekit_ffi_fn_method_incomingdatastreammanagerdelegate_on_text_stream_opened(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeTextStreamReader_lower(reader),
                 FfiConverterString.lower(identity), $0
@@ -1452,7 +1452,7 @@ open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDeleg
      */
     open func onStreamClosed(streamId: String, identity: String) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingdatastreammanagerdelegate_on_stream_closed(
+            uniffi_livekit_ffi_fn_method_incomingdatastreammanagerdelegate_on_stream_closed(
                 self.uniffiCloneHandle(),
                 FfiConverterString.lower(streamId),
                 FfiConverterString.lower(identity), $0
@@ -1569,7 +1569,7 @@ private enum UniffiCallbackInterfaceIncomingDataStreamManagerDelegate {
 }
 
 private func uniffiCallbackInitIncomingDataStreamManagerDelegate() {
-    uniffi_livekit_uniffi_fn_init_callback_vtable_incomingdatastreammanagerdelegate(UniffiCallbackInterfaceIncomingDataStreamManagerDelegate.vtablePtr)
+    uniffi_livekit_ffi_fn_init_callback_vtable_incomingdatastreammanagerdelegate(UniffiCallbackInterfaceIncomingDataStreamManagerDelegate.vtablePtr)
 }
 
 #if swift(>=5.8)
@@ -1699,7 +1699,7 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_incomingstreamqueue(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_incomingstreamqueue(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -1710,7 +1710,7 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_incomingstreamqueue(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_incomingstreamqueue(handle, $0) }
     }
 
     /**
@@ -1719,7 +1719,7 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
      */
     open func close() {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_incomingstreamqueue_close(
+            uniffi_livekit_ffi_fn_method_incomingstreamqueue_close(
                 self.uniffiCloneHandle(), $0
             )
         }
@@ -1735,13 +1735,13 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
     open func nextClosedStream() async -> ClosedStream? {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_incomingstreamqueue_next_closed_stream(
+                uniffi_livekit_ffi_fn_method_incomingstreamqueue_next_closed_stream(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeClosedStream.lift,
             errorHandler: nil
         )
@@ -1757,13 +1757,13 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
     open func nextOpenedStream() async -> OpenedStream? {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_incomingstreamqueue_next_opened_stream(
+                uniffi_livekit_ffi_fn_method_incomingstreamqueue_next_opened_stream(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeOpenedStream.lift,
             errorHandler: nil
         )
@@ -1883,7 +1883,7 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_localdatatrack(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_localdatatrack(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -1894,7 +1894,7 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_localdatatrack(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_localdatatrack(handle, $0) }
     }
 
     /**
@@ -1902,7 +1902,7 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
      */
     open func info() -> DataTrackInfo {
         try! FfiConverterTypeDataTrackInfo_lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_localdatatrack_info(
+            uniffi_livekit_ffi_fn_method_localdatatrack_info(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -1913,7 +1913,7 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
      */
     open func isPublished() -> Bool {
         try! FfiConverterBool.lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_localdatatrack_is_published(
+            uniffi_livekit_ffi_fn_method_localdatatrack_is_published(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -1924,7 +1924,7 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
      */
     open func tryPush(frame: DataTrackFrame) throws {
         try rustCallWithError(FfiConverterTypePushFrameErrorReason_lift) {
-            uniffi_livekit_uniffi_fn_method_localdatatrack_try_push(
+            uniffi_livekit_ffi_fn_method_localdatatrack_try_push(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeDataTrackFrame_lower(frame), $0
             )
@@ -1936,7 +1936,7 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
      */
     open func unpublish() {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_localdatatrack_unpublish(
+            uniffi_livekit_ffi_fn_method_localdatatrack_unpublish(
                 self.uniffiCloneHandle(), $0
             )
         }
@@ -1952,13 +1952,13 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
     open func waitForUnpublish() async {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_localdatatrack_wait_for_unpublish(
+                uniffi_livekit_ffi_fn_method_localdatatrack_wait_for_unpublish(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: nil
         )
@@ -2081,13 +2081,13 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_localdatatrackmanager(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_localdatatrackmanager(self.handle, $0) }
     }
 
     public convenience init(delegate: LocalDataTrackManagerDelegate, encryptionProvider: EncryptionProvider?) {
         let handle =
             try! rustCall {
-                uniffi_livekit_uniffi_fn_constructor_localdatatrackmanager_new(
+                uniffi_livekit_ffi_fn_constructor_localdatatrackmanager_new(
                     FfiConverterTypeLocalDataTrackManagerDelegate_lower(delegate),
                     FfiConverterOptionTypeEncryptionProvider.lower(encryptionProvider), $0
                 )
@@ -2101,7 +2101,7 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_localdatatrackmanager(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_localdatatrackmanager(handle, $0) }
     }
 
     /**
@@ -2109,7 +2109,7 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
      */
     open func handleSfuPublishResponse(res: Data) throws {
         try rustCallWithError(FfiConverterTypeHandleSignalResponseError_lift) {
-            uniffi_livekit_uniffi_fn_method_localdatatrackmanager_handle_sfu_publish_response(
+            uniffi_livekit_ffi_fn_method_localdatatrackmanager_handle_sfu_publish_response(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(res), $0
             )
@@ -2121,7 +2121,7 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
      */
     open func handleSfuRequestResponse(res: Data) throws {
         try rustCallWithError(FfiConverterTypeHandleSignalResponseError_lift) {
-            uniffi_livekit_uniffi_fn_method_localdatatrackmanager_handle_sfu_request_response(
+            uniffi_livekit_ffi_fn_method_localdatatrackmanager_handle_sfu_request_response(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(res), $0
             )
@@ -2137,13 +2137,13 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
     open func publishResponsesForSyncState() async -> [Bytes] {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_localdatatrackmanager_publish_responses_for_sync_state(
+                uniffi_livekit_ffi_fn_method_localdatatrackmanager_publish_responses_for_sync_state(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterSequenceTypeBytes.lift,
             errorHandler: nil
         )
@@ -2155,14 +2155,14 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
     open func publishTrack(options: DataTrackOptions) async throws -> LocalDataTrack {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_localdatatrackmanager_publish_track(
+                uniffi_livekit_ffi_fn_method_localdatatrackmanager_publish_track(
                     self.uniffiCloneHandle(),
                     FfiConverterTypeDataTrackOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_u64,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_u64,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_u64,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_u64,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_u64,
+            freeFunc: ffi_livekit_ffi_rust_future_free_u64,
             liftFunc: FfiConverterTypeLocalDataTrack_lift,
             errorHandler: FfiConverterTypePublishError_lift
         )
@@ -2177,7 +2177,7 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
      */
     open func republishTracks() {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_localdatatrackmanager_republish_tracks(
+            uniffi_livekit_ffi_fn_method_localdatatrackmanager_republish_tracks(
                 self.uniffiCloneHandle(), $0
             )
         }
@@ -2278,7 +2278,7 @@ open class LocalDataTrackManagerDelegateImpl: LocalDataTrackManagerDelegate, @un
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_localdatatrackmanagerdelegate(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_localdatatrackmanagerdelegate(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -2289,7 +2289,7 @@ open class LocalDataTrackManagerDelegateImpl: LocalDataTrackManagerDelegate, @un
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_localdatatrackmanagerdelegate(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_localdatatrackmanagerdelegate(handle, $0) }
     }
 
     /**
@@ -2297,7 +2297,7 @@ open class LocalDataTrackManagerDelegateImpl: LocalDataTrackManagerDelegate, @un
      */
     open func onSignalRequest(request: Data) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_localdatatrackmanagerdelegate_on_signal_request(
+            uniffi_livekit_ffi_fn_method_localdatatrackmanagerdelegate_on_signal_request(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(request), $0
             )
@@ -2309,7 +2309,7 @@ open class LocalDataTrackManagerDelegateImpl: LocalDataTrackManagerDelegate, @un
      */
     open func onPacketsAvailable(packets: [Bytes]) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_localdatatrackmanagerdelegate_on_packets_available(
+            uniffi_livekit_ffi_fn_method_localdatatrackmanagerdelegate_on_packets_available(
                 self.uniffiCloneHandle(),
                 FfiConverterSequenceTypeBytes.lower(packets), $0
             )
@@ -2396,7 +2396,7 @@ private enum UniffiCallbackInterfaceLocalDataTrackManagerDelegate {
 }
 
 private func uniffiCallbackInitLocalDataTrackManagerDelegate() {
-    uniffi_livekit_uniffi_fn_init_callback_vtable_localdatatrackmanagerdelegate(UniffiCallbackInterfaceLocalDataTrackManagerDelegate.vtablePtr)
+    uniffi_livekit_ffi_fn_init_callback_vtable_localdatatrackmanagerdelegate(UniffiCallbackInterfaceLocalDataTrackManagerDelegate.vtablePtr)
 }
 
 #if swift(>=5.8)
@@ -2525,13 +2525,13 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_outgoingdatastreammanager(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_outgoingdatastreammanager(self.handle, $0) }
     }
 
     public convenience init(delegate: OutgoingDataStreamManagerDelegate, registry: RemoteParticipantRegistryDelegate) {
         let handle =
             try! rustCall {
-                uniffi_livekit_uniffi_fn_constructor_outgoingdatastreammanager_new(
+                uniffi_livekit_ffi_fn_constructor_outgoingdatastreammanager_new(
                     FfiConverterTypeOutgoingDataStreamManagerDelegate_lower(delegate),
                     FfiConverterTypeRemoteParticipantRegistryDelegate_lower(registry), $0
                 )
@@ -2545,7 +2545,7 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_outgoingdatastreammanager(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_outgoingdatastreammanager(handle, $0) }
     }
 
     /**
@@ -2554,14 +2554,14 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
     open func sendBytes(data: Bytes, options: StreamByteOptions) async throws -> ByteStreamInfo {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingdatastreammanager_send_bytes(
+                uniffi_livekit_ffi_fn_method_outgoingdatastreammanager_send_bytes(
                     self.uniffiCloneHandle(),
                     FfiConverterTypeBytes_lower(data), FfiConverterTypeStreamByteOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeByteStreamInfo_lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -2573,14 +2573,14 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
     open func sendFile(path: String, options: StreamByteOptions) async throws -> ByteStreamInfo {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingdatastreammanager_send_file(
+                uniffi_livekit_ffi_fn_method_outgoingdatastreammanager_send_file(
                     self.uniffiCloneHandle(),
                     FfiConverterString.lower(path), FfiConverterTypeStreamByteOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeByteStreamInfo_lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -2592,14 +2592,14 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
     open func sendText(text: String, options: StreamTextOptions) async throws -> TextStreamInfo {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingdatastreammanager_send_text(
+                uniffi_livekit_ffi_fn_method_outgoingdatastreammanager_send_text(
                     self.uniffiCloneHandle(),
                     FfiConverterString.lower(text), FfiConverterTypeStreamTextOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeTextStreamInfo_lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -2611,14 +2611,14 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
     open func streamBytes(options: StreamByteOptions) async throws -> ByteStreamWriter {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingdatastreammanager_stream_bytes(
+                uniffi_livekit_ffi_fn_method_outgoingdatastreammanager_stream_bytes(
                     self.uniffiCloneHandle(),
                     FfiConverterTypeStreamByteOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_u64,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_u64,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_u64,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_u64,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_u64,
+            freeFunc: ffi_livekit_ffi_rust_future_free_u64,
             liftFunc: FfiConverterTypeByteStreamWriter_lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -2630,14 +2630,14 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
     open func streamText(options: StreamTextOptions) async throws -> TextStreamWriter {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingdatastreammanager_stream_text(
+                uniffi_livekit_ffi_fn_method_outgoingdatastreammanager_stream_text(
                     self.uniffiCloneHandle(),
                     FfiConverterTypeStreamTextOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_u64,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_u64,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_u64,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_u64,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_u64,
+            freeFunc: ffi_livekit_ffi_rust_future_free_u64,
             liftFunc: FfiConverterTypeTextStreamWriter_lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -2742,7 +2742,7 @@ open class OutgoingDataStreamManagerDelegateImpl: OutgoingDataStreamManagerDeleg
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_outgoingdatastreammanagerdelegate(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_outgoingdatastreammanagerdelegate(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -2753,7 +2753,7 @@ open class OutgoingDataStreamManagerDelegateImpl: OutgoingDataStreamManagerDeleg
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_outgoingdatastreammanagerdelegate(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_outgoingdatastreammanagerdelegate(handle, $0) }
     }
 
     /**
@@ -2771,14 +2771,14 @@ open class OutgoingDataStreamManagerDelegateImpl: OutgoingDataStreamManagerDeleg
     open func onPacketsAvailable(packets: [Bytes]) async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingdatastreammanagerdelegate_on_packets_available(
+                uniffi_livekit_ffi_fn_method_outgoingdatastreammanagerdelegate_on_packets_available(
                     self.uniffiCloneHandle(),
                     FfiConverterSequenceTypeBytes.lower(packets)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypePacketDeliveryError_lift
         )
@@ -2859,7 +2859,7 @@ private enum UniffiCallbackInterfaceOutgoingDataStreamManagerDelegate {
 }
 
 private func uniffiCallbackInitOutgoingDataStreamManagerDelegate() {
-    uniffi_livekit_uniffi_fn_init_callback_vtable_outgoingdatastreammanagerdelegate(UniffiCallbackInterfaceOutgoingDataStreamManagerDelegate.vtablePtr)
+    uniffi_livekit_ffi_fn_init_callback_vtable_outgoingdatastreammanagerdelegate(UniffiCallbackInterfaceOutgoingDataStreamManagerDelegate.vtablePtr)
 }
 
 #if swift(>=5.8)
@@ -2982,7 +2982,7 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_outgoingpacketqueue(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_outgoingpacketqueue(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -2993,7 +2993,7 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_outgoingpacketqueue(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_outgoingpacketqueue(handle, $0) }
     }
 
     /**
@@ -3004,7 +3004,7 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
      */
     open func close() {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_outgoingpacketqueue_close(
+            uniffi_livekit_ffi_fn_method_outgoingpacketqueue_close(
                 self.uniffiCloneHandle(), $0
             )
         }
@@ -3020,13 +3020,13 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
     open func nextPackets() async -> [Bytes]? {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_outgoingpacketqueue_next_packets(
+                uniffi_livekit_ffi_fn_method_outgoingpacketqueue_next_packets(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionSequenceTypeBytes.lift,
             errorHandler: nil
         )
@@ -3160,7 +3160,7 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_remotedatatrack(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_remotedatatrack(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -3171,7 +3171,7 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_remotedatatrack(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_remotedatatrack(handle, $0) }
     }
 
     /**
@@ -3179,7 +3179,7 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
      */
     open func info() -> DataTrackInfo {
         try! FfiConverterTypeDataTrackInfo_lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrack_info(
+            uniffi_livekit_ffi_fn_method_remotedatatrack_info(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -3190,7 +3190,7 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
      */
     open func isPublished() -> Bool {
         try! FfiConverterBool.lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrack_is_published(
+            uniffi_livekit_ffi_fn_method_remotedatatrack_is_published(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -3201,7 +3201,7 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
      */
     open func publisherIdentity() -> String {
         try! FfiConverterString.lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrack_publisher_identity(
+            uniffi_livekit_ffi_fn_method_remotedatatrack_publisher_identity(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -3216,7 +3216,7 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
      */
     open func setPipelineOptions(options: RemoteDataTrackPipelineOptions) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrack_set_pipeline_options(
+            uniffi_livekit_ffi_fn_method_remotedatatrack_set_pipeline_options(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeRemoteDataTrackPipelineOptions_lower(options), $0
             )
@@ -3229,13 +3229,13 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
     open func subscribe() async throws -> DataTrackStream {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_remotedatatrack_subscribe(
+                uniffi_livekit_ffi_fn_method_remotedatatrack_subscribe(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_u64,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_u64,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_u64,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_u64,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_u64,
+            freeFunc: ffi_livekit_ffi_rust_future_free_u64,
             liftFunc: FfiConverterTypeDataTrackStream_lift,
             errorHandler: FfiConverterTypeDataTrackSubscribeError_lift
         )
@@ -3247,14 +3247,14 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
     open func subscribeWithOptions(options: DataTrackSubscribeOptions) async throws -> DataTrackStream {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_remotedatatrack_subscribe_with_options(
+                uniffi_livekit_ffi_fn_method_remotedatatrack_subscribe_with_options(
                     self.uniffiCloneHandle(),
                     FfiConverterTypeDataTrackSubscribeOptions_lower(options)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_u64,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_u64,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_u64,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_u64,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_u64,
+            freeFunc: ffi_livekit_ffi_rust_future_free_u64,
             liftFunc: FfiConverterTypeDataTrackStream_lift,
             errorHandler: FfiConverterTypeDataTrackSubscribeError_lift
         )
@@ -3270,13 +3270,13 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
     open func waitForUnpublish() async {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_remotedatatrack_wait_for_unpublish(
+                uniffi_livekit_ffi_fn_method_remotedatatrack_wait_for_unpublish(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: nil
         )
@@ -3407,13 +3407,13 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_remotedatatrackmanager(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_remotedatatrackmanager(self.handle, $0) }
     }
 
     public convenience init(delegate: RemoteDataTrackManagerDelegate, decryptionProvider: DecryptionProvider?) {
         let handle =
             try! rustCall {
-                uniffi_livekit_uniffi_fn_constructor_remotedatatrackmanager_new(
+                uniffi_livekit_ffi_fn_constructor_remotedatatrackmanager_new(
                     FfiConverterTypeRemoteDataTrackManagerDelegate_lower(delegate),
                     FfiConverterOptionTypeDecryptionProvider.lower(decryptionProvider), $0
                 )
@@ -3427,7 +3427,7 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_remotedatatrackmanager(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_remotedatatrackmanager(handle, $0) }
     }
 
     /**
@@ -3435,7 +3435,7 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
      */
     open func handlePacketReceived(packet: Bytes) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanager_handle_packet_received(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanager_handle_packet_received(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeBytes_lower(packet), $0
             )
@@ -3451,7 +3451,7 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
      */
     open func handleSfuJoinResponse(res: Data) throws {
         try rustCallWithError(FfiConverterTypeHandleSignalResponseError_lift) {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanager_handle_sfu_join_response(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanager_handle_sfu_join_response(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(res), $0
             )
@@ -3470,7 +3470,7 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
      */
     open func handleSfuParticipantUpdate(res: Data, localParticipantIdentity: String) throws {
         try rustCallWithError(FfiConverterTypeHandleSignalResponseError_lift) {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanager_handle_sfu_participant_update(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanager_handle_sfu_participant_update(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(res),
                 FfiConverterString.lower(localParticipantIdentity), $0
@@ -3483,7 +3483,7 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
      */
     open func handleSubscriberHandles(res: Data) throws {
         try rustCallWithError(FfiConverterTypeHandleSignalResponseError_lift) {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanager_handle_subscriber_handles(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanager_handle_subscriber_handles(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(res), $0
             )
@@ -3499,7 +3499,7 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
      */
     open func resendSubscriptionUpdates() {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanager_resend_subscription_updates(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanager_resend_subscription_updates(
                 self.uniffiCloneHandle(), $0
             )
         }
@@ -3610,7 +3610,7 @@ open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_remotedatatrackmanagerdelegate(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_remotedatatrackmanagerdelegate(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -3621,7 +3621,7 @@ open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_remotedatatrackmanagerdelegate(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_remotedatatrackmanagerdelegate(handle, $0) }
     }
 
     /**
@@ -3629,7 +3629,7 @@ open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @
      */
     open func onSignalRequest(request: Data) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanagerdelegate_on_signal_request(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanagerdelegate_on_signal_request(
                 self.uniffiCloneHandle(),
                 FfiConverterData.lower(request), $0
             )
@@ -3646,7 +3646,7 @@ open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @
      */
     open func onTrackPublished(track: RemoteDataTrack) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanagerdelegate_on_track_published(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanagerdelegate_on_track_published(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeRemoteDataTrack_lower(track), $0
             )
@@ -3658,7 +3658,7 @@ open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @
      */
     open func onTrackUnpublished(sid: DataTrackSid) {
         try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remotedatatrackmanagerdelegate_on_track_unpublished(
+            uniffi_livekit_ffi_fn_method_remotedatatrackmanagerdelegate_on_track_unpublished(
                 self.uniffiCloneHandle(),
                 FfiConverterTypeDataTrackSid_lower(sid), $0
             )
@@ -3768,7 +3768,7 @@ private enum UniffiCallbackInterfaceRemoteDataTrackManagerDelegate {
 }
 
 private func uniffiCallbackInitRemoteDataTrackManagerDelegate() {
-    uniffi_livekit_uniffi_fn_init_callback_vtable_remotedatatrackmanagerdelegate(UniffiCallbackInterfaceRemoteDataTrackManagerDelegate.vtablePtr)
+    uniffi_livekit_ffi_fn_init_callback_vtable_remotedatatrackmanagerdelegate(UniffiCallbackInterfaceRemoteDataTrackManagerDelegate.vtablePtr)
 }
 
 #if swift(>=5.8)
@@ -3889,7 +3889,7 @@ open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDeleg
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_remoteparticipantregistrydelegate(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_remoteparticipantregistrydelegate(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -3900,7 +3900,7 @@ open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDeleg
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_remoteparticipantregistrydelegate(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_remoteparticipantregistrydelegate(handle, $0) }
     }
 
     /**
@@ -3908,7 +3908,7 @@ open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDeleg
      */
     open func remoteClientProtocol(identity: String) -> Int32 {
         try! FfiConverterInt32.lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remoteparticipantregistrydelegate_remote_client_protocol(
+            uniffi_livekit_ffi_fn_method_remoteparticipantregistrydelegate_remote_client_protocol(
                 self.uniffiCloneHandle(),
                 FfiConverterString.lower(identity), $0
             )
@@ -3920,7 +3920,7 @@ open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDeleg
      */
     open func remoteCapabilities(identity: String) -> [ClientCapability] {
         try! FfiConverterSequenceTypeClientCapability.lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remoteparticipantregistrydelegate_remote_capabilities(
+            uniffi_livekit_ffi_fn_method_remoteparticipantregistrydelegate_remote_capabilities(
                 self.uniffiCloneHandle(),
                 FfiConverterString.lower(identity), $0
             )
@@ -3932,7 +3932,7 @@ open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDeleg
      */
     open func remoteIdentities() -> [String] {
         try! FfiConverterSequenceString.lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_remoteparticipantregistrydelegate_remote_identities(
+            uniffi_livekit_ffi_fn_method_remoteparticipantregistrydelegate_remote_identities(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -4039,7 +4039,7 @@ private enum UniffiCallbackInterfaceRemoteParticipantRegistryDelegate {
 }
 
 private func uniffiCallbackInitRemoteParticipantRegistryDelegate() {
-    uniffi_livekit_uniffi_fn_init_callback_vtable_remoteparticipantregistrydelegate(UniffiCallbackInterfaceRemoteParticipantRegistryDelegate.vtablePtr)
+    uniffi_livekit_ffi_fn_init_callback_vtable_remoteparticipantregistrydelegate(UniffiCallbackInterfaceRemoteParticipantRegistryDelegate.vtablePtr)
 }
 
 #if swift(>=5.8)
@@ -4156,7 +4156,7 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_textstreamreader(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_textstreamreader(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -4167,7 +4167,7 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_textstreamreader(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_textstreamreader(handle, $0) }
     }
 
     /**
@@ -4175,7 +4175,7 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
      */
     open func info() -> TextStreamInfo {
         try! FfiConverterTypeTextStreamInfo_lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_textstreamreader_info(
+            uniffi_livekit_ffi_fn_method_textstreamreader_info(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -4187,13 +4187,13 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
     open func next() async throws -> String? {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_textstreamreader_next(
+                uniffi_livekit_ffi_fn_method_textstreamreader_next(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionString.lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -4205,13 +4205,13 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
     open func readAll() async throws -> String {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_textstreamreader_read_all(
+                uniffi_livekit_ffi_fn_method_textstreamreader_read_all(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterString.lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -4327,7 +4327,7 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
         @_documentation(visibility: private)
     #endif
     public func uniffiCloneHandle() -> UInt64 {
-        try! rustCall { uniffi_livekit_uniffi_fn_clone_textstreamwriter(self.handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_clone_textstreamwriter(self.handle, $0) }
     }
 
     // No primary constructor declared for this class.
@@ -4338,7 +4338,7 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
             return
         }
 
-        try! rustCall { uniffi_livekit_uniffi_fn_free_textstreamwriter(handle, $0) }
+        try! rustCall { uniffi_livekit_ffi_fn_free_textstreamwriter(handle, $0) }
     }
 
     /**
@@ -4347,13 +4347,13 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
     open func close() async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_textstreamwriter_close(
+                uniffi_livekit_ffi_fn_method_textstreamwriter_close(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -4365,14 +4365,14 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
     open func closeWithReason(reason: String) async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_textstreamwriter_close_with_reason(
+                uniffi_livekit_ffi_fn_method_textstreamwriter_close_with_reason(
                     self.uniffiCloneHandle(),
                     FfiConverterString.lower(reason)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -4383,7 +4383,7 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
      */
     open func info() -> TextStreamInfo {
         try! FfiConverterTypeTextStreamInfo_lift(try! rustCall {
-            uniffi_livekit_uniffi_fn_method_textstreamwriter_info(
+            uniffi_livekit_ffi_fn_method_textstreamwriter_info(
                 self.uniffiCloneHandle(), $0
             )
         })
@@ -4395,13 +4395,13 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
     open func isOpen() async -> Bool {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_textstreamwriter_is_open(
+                uniffi_livekit_ffi_fn_method_textstreamwriter_is_open(
                     self.uniffiCloneHandle()
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_i8,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_i8,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_i8,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_i8,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_i8,
+            freeFunc: ffi_livekit_ffi_rust_future_free_i8,
             liftFunc: FfiConverterBool.lift,
             errorHandler: nil
         )
@@ -4413,14 +4413,14 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
     open func write(text: String) async throws {
         try await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_uniffi_fn_method_textstreamwriter_write(
+                uniffi_livekit_ffi_fn_method_textstreamwriter_write(
                     self.uniffiCloneHandle(),
                     FfiConverterString.lower(text)
                 )
             },
-            pollFunc: ffi_livekit_uniffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_uniffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_uniffi_rust_future_free_void,
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeDataStreamError_lift
         )
@@ -7433,7 +7433,7 @@ private func uniffiRustCallAsync<F, T>(
 ) async throws -> T {
     // Make sure to call the ensure init function since future creation doesn't have a
     // RustCallStatus param, so doesn't use makeRustCall()
-    uniffiEnsureLivekitUniffiInitialized()
+    uniffiEnsureLivekitFfiInitialized()
     let rustFuture = rustFutureFunc()
     defer {
         freeFunc(rustFuture)
@@ -7554,8 +7554,21 @@ private func uniffiForeignFutureDroppedCallback(handle: UInt64) {
 }
 
 /// For testing
-public func uniffiForeignFutureHandleCountLivekitUniffi() -> Int {
+public func uniffiForeignFutureHandleCountLivekitFfi() -> Int {
     UNIFFI_FOREIGN_FUTURE_HANDLE_MAP.count
+}
+
+/**
+ * Returns the version specified in the crate's Cargo.toml.
+ *
+ * This is the first function exposed over UniFFI from `livekit-ffi`. It carries
+ * no server state and touches no handle store, so downstream SDKs can call it to
+ * prove the UniFFI bindgen toolchain is wired up end-to-end.
+ */
+public func buildVersion() -> String {
+    try! FfiConverterString.lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_build_version($0)
+    })
 }
 
 /**
@@ -7568,7 +7581,7 @@ public func uniffiForeignFutureHandleCountLivekitUniffi() -> Int {
  */
 public func tokenClaimsFromUnverified(token: String) throws -> Claims {
     try FfiConverterTypeClaims_lift(rustCallWithError(FfiConverterTypeAccessTokenError_lift) {
-        uniffi_livekit_uniffi_fn_func_token_claims_from_unverified(
+        uniffi_livekit_ffi_fn_func_token_claims_from_unverified(
             FfiConverterString.lower(token), $0
         )
     })
@@ -7583,7 +7596,7 @@ public func tokenClaimsFromUnverified(token: String) throws -> Claims {
  */
 public func tokenGenerate(options: TokenOptions, credentials: ApiCredentials?) throws -> String {
     try FfiConverterString.lift(rustCallWithError(FfiConverterTypeAccessTokenError_lift) {
-        uniffi_livekit_uniffi_fn_func_token_generate(
+        uniffi_livekit_ffi_fn_func_token_generate(
             FfiConverterTypeTokenOptions_lower(options),
             FfiConverterOptionTypeApiCredentials.lower(credentials), $0
         )
@@ -7599,19 +7612,10 @@ public func tokenGenerate(options: TokenOptions, credentials: ApiCredentials?) t
  */
 public func tokenVerify(token: String, credentials: ApiCredentials?) throws -> Claims {
     try FfiConverterTypeClaims_lift(rustCallWithError(FfiConverterTypeAccessTokenError_lift) {
-        uniffi_livekit_uniffi_fn_func_token_verify(
+        uniffi_livekit_ffi_fn_func_token_verify(
             FfiConverterString.lower(token),
             FfiConverterOptionTypeApiCredentials.lower(credentials), $0
         )
-    })
-}
-
-/**
- * Returns the version specified in the crate's Cargo.toml.
- */
-public func buildVersion() -> String {
-    try! FfiConverterString.lift(try! rustCall {
-        uniffi_livekit_uniffi_fn_func_build_version($0)
     })
 }
 
@@ -7624,7 +7628,7 @@ public func buildVersion() -> String {
  */
 public func polledIncomingDataStreamManager(maxPayloadByteLength: UInt64?) -> PolledIncomingDataStreamManager {
     try! FfiConverterTypePolledIncomingDataStreamManager_lift(try! rustCall {
-        uniffi_livekit_uniffi_fn_func_polled_incoming_data_stream_manager(
+        uniffi_livekit_ffi_fn_func_polled_incoming_data_stream_manager(
             FfiConverterOptionUInt64.lower(maxPayloadByteLength), $0
         )
     })
@@ -7639,7 +7643,7 @@ public func polledIncomingDataStreamManager(maxPayloadByteLength: UInt64?) -> Po
  */
 public func polledOutgoingDataStreamManager(registry: RemoteParticipantRegistryDelegate) -> PolledOutgoingDataStreamManager {
     try! FfiConverterTypePolledOutgoingDataStreamManager_lift(try! rustCall {
-        uniffi_livekit_uniffi_fn_func_polled_outgoing_data_stream_manager(
+        uniffi_livekit_ffi_fn_func_polled_outgoing_data_stream_manager(
             FfiConverterTypeRemoteParticipantRegistryDelegate_lower(registry), $0
         )
     })
@@ -7654,7 +7658,7 @@ public func polledOutgoingDataStreamManager(registry: RemoteParticipantRegistryD
  */
 public func logForwardBootstrap(level: LogForwardFilter) {
     try! rustCall {
-        uniffi_livekit_uniffi_fn_func_log_forward_bootstrap(
+        uniffi_livekit_ffi_fn_func_log_forward_bootstrap(
             FfiConverterTypeLogForwardFilter_lower(level), $0
         )
     }
@@ -7671,12 +7675,12 @@ public func logForwardBootstrap(level: LogForwardFilter) {
 public func logForwardReceive() async -> LogForwardEntry? {
     try! await uniffiRustCallAsync(
         rustFutureFunc: {
-            uniffi_livekit_uniffi_fn_func_log_forward_receive(
+            uniffi_livekit_ffi_fn_func_log_forward_receive(
             )
         },
-        pollFunc: ffi_livekit_uniffi_rust_future_poll_rust_buffer,
-        completeFunc: ffi_livekit_uniffi_rust_future_complete_rust_buffer,
-        freeFunc: ffi_livekit_uniffi_rust_future_free_rust_buffer,
+        pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+        completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+        freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
         liftFunc: FfiConverterOptionTypeLogForwardEntry.lift,
         errorHandler: nil
     )
@@ -7694,239 +7698,239 @@ private let initializationResult: InitializationResult = {
     // Get the bindings contract version from our ComponentInterface
     let bindings_contract_version = 30
     // Get the scaffolding contract version by calling the into the dylib
-    let scaffolding_contract_version = ffi_livekit_uniffi_uniffi_contract_version()
+    let scaffolding_contract_version = ffi_livekit_ffi_uniffi_contract_version()
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_token_claims_from_unverified() != 50037 {
+    if uniffi_livekit_ffi_checksum_func_build_version() != 47150 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_token_generate() != 61939 {
+    if uniffi_livekit_ffi_checksum_func_token_claims_from_unverified() != 15713 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_token_verify() != 22102 {
+    if uniffi_livekit_ffi_checksum_func_token_generate() != 17847 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_build_version() != 21480 {
+    if uniffi_livekit_ffi_checksum_func_token_verify() != 46552 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_polled_incoming_data_stream_manager() != 59681 {
+    if uniffi_livekit_ffi_checksum_func_polled_incoming_data_stream_manager() != 17254 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_polled_outgoing_data_stream_manager() != 16176 {
+    if uniffi_livekit_ffi_checksum_func_polled_outgoing_data_stream_manager() != 31857 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_log_forward_bootstrap() != 25458 {
+    if uniffi_livekit_ffi_checksum_func_log_forward_bootstrap() != 57935 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_func_log_forward_receive() != 58503 {
+    if uniffi_livekit_ffi_checksum_func_log_forward_receive() != 7577 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamreader_info() != 10285 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamreader_info() != 4408 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamreader_next() != 62806 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamreader_next() != 17127 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamreader_read_all() != 8858 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamreader_read_all() != 38480 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanager_abort_all_streams() != 37772 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanager_abort_all_streams() != 4371 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanager_abort_streams_from() != 27277 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanager_abort_streams_from() != 38161 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanager_handle_packet_received() != 28698 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanager_handle_packet_received() != 1794 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanager_open_stream_count() != 51052 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanager_open_stream_count() != 9566 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanagerdelegate_on_byte_stream_opened() != 16413 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanagerdelegate_on_byte_stream_opened() != 9266 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanagerdelegate_on_text_stream_opened() != 64529 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanagerdelegate_on_text_stream_opened() != 63363 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingdatastreammanagerdelegate_on_stream_closed() != 35314 {
+    if uniffi_livekit_ffi_checksum_method_incomingdatastreammanagerdelegate_on_stream_closed() != 16465 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamreader_info() != 6861 {
+    if uniffi_livekit_ffi_checksum_method_textstreamreader_info() != 7073 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamreader_next() != 56274 {
+    if uniffi_livekit_ffi_checksum_method_textstreamreader_next() != 53122 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamreader_read_all() != 26313 {
+    if uniffi_livekit_ffi_checksum_method_textstreamreader_read_all() != 50865 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamwriter_close() != 39404 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_close() != 54450 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamwriter_close_with_reason() != 54863 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_close_with_reason() != 31420 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamwriter_info() != 5482 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_info() != 44503 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamwriter_is_open() != 18526 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_is_open() != 15595 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_bytestreamwriter_write() != 51985 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_write() != 54056 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingdatastreammanager_send_bytes() != 36743 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_bytes() != 59992 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingdatastreammanager_send_file() != 17211 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_file() != 63766 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingdatastreammanager_send_text() != 44627 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_text() != 10674 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingdatastreammanager_stream_bytes() != 17761 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_stream_bytes() != 9777 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingdatastreammanager_stream_text() != 34690 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_stream_text() != 54773 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingdatastreammanagerdelegate_on_packets_available() != 2572 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanagerdelegate_on_packets_available() != 15169 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remoteparticipantregistrydelegate_remote_client_protocol() != 48134 {
+    if uniffi_livekit_ffi_checksum_method_remoteparticipantregistrydelegate_remote_client_protocol() != 46239 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remoteparticipantregistrydelegate_remote_capabilities() != 2201 {
+    if uniffi_livekit_ffi_checksum_method_remoteparticipantregistrydelegate_remote_capabilities() != 30170 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remoteparticipantregistrydelegate_remote_identities() != 42803 {
+    if uniffi_livekit_ffi_checksum_method_remoteparticipantregistrydelegate_remote_identities() != 9949 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamwriter_close() != 43279 {
+    if uniffi_livekit_ffi_checksum_method_textstreamwriter_close() != 8496 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamwriter_close_with_reason() != 39023 {
+    if uniffi_livekit_ffi_checksum_method_textstreamwriter_close_with_reason() != 39956 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamwriter_info() != 27425 {
+    if uniffi_livekit_ffi_checksum_method_textstreamwriter_info() != 4252 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamwriter_is_open() != 24885 {
+    if uniffi_livekit_ffi_checksum_method_textstreamwriter_is_open() != 58242 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_textstreamwriter_write() != 50876 {
+    if uniffi_livekit_ffi_checksum_method_textstreamwriter_write() != 40008 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingstreamqueue_close() != 4954 {
+    if uniffi_livekit_ffi_checksum_method_incomingstreamqueue_close() != 9253 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingstreamqueue_next_closed_stream() != 10337 {
+    if uniffi_livekit_ffi_checksum_method_incomingstreamqueue_next_closed_stream() != 44106 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_incomingstreamqueue_next_opened_stream() != 44884 {
+    if uniffi_livekit_ffi_checksum_method_incomingstreamqueue_next_opened_stream() != 43280 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingpacketqueue_close() != 35032 {
+    if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_close() != 60144 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_outgoingpacketqueue_next_packets() != 15206 {
+    if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_next_packets() != 3004 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrack_info() != 60151 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_info() != 29037 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrack_is_published() != 760 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_is_published() != 28961 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrack_try_push() != 40290 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_try_push() != 43389 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrack_unpublish() != 40300 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_unpublish() != 47315 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrack_wait_for_unpublish() != 39190 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_wait_for_unpublish() != 50113 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanager_handle_sfu_publish_response() != 52069 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_handle_sfu_publish_response() != 20082 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanager_handle_sfu_request_response() != 14552 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_handle_sfu_request_response() != 7714 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanager_publish_responses_for_sync_state() != 22678 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_publish_responses_for_sync_state() != 11866 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanager_publish_track() != 31959 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_publish_track() != 53784 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanager_republish_tracks() != 2671 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_republish_tracks() != 33617 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanagerdelegate_on_signal_request() != 28972 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanagerdelegate_on_signal_request() != 42335 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_localdatatrackmanagerdelegate_on_packets_available() != 19578 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanagerdelegate_on_packets_available() != 22604 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_datatrackstream_next() != 35219 {
+    if uniffi_livekit_ffi_checksum_method_datatrackstream_next() != 39825 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_info() != 11559 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_info() != 23075 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_is_published() != 63127 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_is_published() != 58218 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_publisher_identity() != 40711 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_publisher_identity() != 47854 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_set_pipeline_options() != 47812 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_set_pipeline_options() != 61001 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_subscribe() != 23718 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_subscribe() != 8594 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_subscribe_with_options() != 44043 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_subscribe_with_options() != 19634 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrack_wait_for_unpublish() != 30281 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_wait_for_unpublish() != 45106 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanager_handle_packet_received() != 20834 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_packet_received() != 23983 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanager_handle_sfu_join_response() != 40603 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_sfu_join_response() != 47161 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanager_handle_sfu_participant_update() != 65460 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_sfu_participant_update() != 57960 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanager_handle_subscriber_handles() != 10984 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_subscriber_handles() != 8501 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanager_resend_subscription_updates() != 45173 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_resend_subscription_updates() != 64037 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanagerdelegate_on_signal_request() != 17633 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_signal_request() != 11017 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanagerdelegate_on_track_published() != 34810 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_published() != 12905 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_method_remotedatatrackmanagerdelegate_on_track_unpublished() != 204 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_unpublished() != 9643 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_constructor_incomingdatastreammanager_new() != 27033 {
+    if uniffi_livekit_ffi_checksum_constructor_incomingdatastreammanager_new() != 34777 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_constructor_outgoingdatastreammanager_new() != 53243 {
+    if uniffi_livekit_ffi_checksum_constructor_outgoingdatastreammanager_new() != 38588 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_constructor_localdatatrackmanager_new() != 49140 {
+    if uniffi_livekit_ffi_checksum_constructor_localdatatrackmanager_new() != 27273 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_uniffi_checksum_constructor_remotedatatrackmanager_new() != 42521 {
+    if uniffi_livekit_ffi_checksum_constructor_remotedatatrackmanager_new() != 46295 {
         return InitializationResult.apiChecksumMismatch
     }
 
@@ -7942,7 +7946,7 @@ private let initializationResult: InitializationResult = {
 
 /// Make the ensure init function public so that other modules which have external type references to
 /// our types can call it.
-public func uniffiEnsureLivekitUniffiInitialized() {
+public func uniffiEnsureLivekitFfiInitialized() {
     switch initializationResult {
     case .ok:
         break

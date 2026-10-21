@@ -1,7 +1,7 @@
 # Generated from Rust template
 Pod::Spec.new do |spec|
-  spec.name = "LiveKitUniFFI"
-  spec.version = "0.3.0"
+  spec.name = "LiveKitFFI"
+  spec.version = "0.13.0"
   spec.summary = "LiveKit UniFFI bindings"
   spec.description = <<-DESC
     LiveKit UniFFI XCFramework with Swift bindings
@@ -19,13 +19,13 @@ Pod::Spec.new do |spec|
   }
 
   spec.prepare_command = <<-CMD
-    FRAMEWORK_URL="https://github.com/livekit/livekit-uniffi-xcframework/releases/download/#{spec.version}/RustLiveKitUniFFI.xcframework.zip"
-    curl -L -o RustLiveKitUniFFI.xcframework.zip "$FRAMEWORK_URL"
-    unzip -q RustLiveKitUniFFI.xcframework.zip
-    rm RustLiveKitUniFFI.xcframework.zip
+    FRAMEWORK_URL="https://github.com/livekit/livekit-uniffi-xcframework/releases/download/#{spec.version}/RustLiveKitFFI.xcframework.zip"
+    curl -L -o RustLiveKitFFI.xcframework.zip "$FRAMEWORK_URL"
+    unzip -q RustLiveKitFFI.xcframework.zip
+    rm RustLiveKitFFI.xcframework.zip
   CMD
 
-  spec.module_name = "LiveKitUniFFI"
-  spec.source_files = "Sources/LiveKitUniFFI/**/*.swift"
-  spec.vendored_frameworks = "RustLiveKitUniFFI.xcframework"
+  spec.module_name = "LiveKitFFI"
+  spec.source_files = "Sources/LiveKitFFI/**/*.swift"
+  spec.vendored_frameworks = "RustLiveKitFFI.xcframework"
 end
