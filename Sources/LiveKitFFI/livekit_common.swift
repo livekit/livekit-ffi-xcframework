@@ -489,7 +489,7 @@ public struct FfiConverterTypeBytes: FfiConverter {
     }
 
     public static func write(_ value: Bytes, into buf: inout [UInt8]) {
-        FfiConverterData.write(value, into: &buf)
+        return FfiConverterData.write(value, into: &buf)
     }
 
     public static func lift(_ value: RustBuffer) throws -> Bytes {
