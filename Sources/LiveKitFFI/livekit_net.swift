@@ -1079,19 +1079,20 @@ open class WsConnectionImpl: WsConnection, @unchecked Sendable {
      * Send one binary application frame.
      */
     open func send(frame: Data) async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_net_fn_method_wsconnection_send(
-                    self.uniffiCloneHandle(),
-                    FfiConverterData.lower(frame)
-                )
-            },
-            pollFunc: ffi_livekit_net_rust_future_poll_void,
-            completeFunc: ffi_livekit_net_rust_future_complete_void,
-            freeFunc: ffi_livekit_net_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeTransportError_lift
-        )
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_net_fn_method_wsconnection_send(
+                        self.uniffiCloneHandle(),
+                        FfiConverterData.lower(frame)
+                    )
+                },
+                pollFunc: ffi_livekit_net_rust_future_poll_void,
+                completeFunc: ffi_livekit_net_rust_future_complete_void,
+                freeFunc: ffi_livekit_net_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeTransportError_lift
+            )
     }
 
     /**
@@ -1116,18 +1117,19 @@ open class WsConnectionImpl: WsConnection, @unchecked Sendable {
      * Close the connection, sending a close frame if the transport supports it.
      */
     open func close() async {
-        try! await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_net_fn_method_wsconnection_close(
-                    self.uniffiCloneHandle()
-                )
-            },
-            pollFunc: ffi_livekit_net_rust_future_poll_void,
-            completeFunc: ffi_livekit_net_rust_future_complete_void,
-            freeFunc: ffi_livekit_net_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: nil
-        )
+        return
+            try! await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_net_fn_method_wsconnection_close(
+                        self.uniffiCloneHandle()
+                    )
+                },
+                pollFunc: ffi_livekit_net_rust_future_poll_void,
+                completeFunc: ffi_livekit_net_rust_future_complete_void,
+                freeFunc: ffi_livekit_net_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: nil
+            )
     }
 }
 
@@ -1655,8 +1657,8 @@ private struct FfiConverterOptionData: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterData.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterData.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }

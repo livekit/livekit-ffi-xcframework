@@ -425,6 +425,22 @@ private let UNIFFI_CALLBACK_UNEXPECTED_ERROR: Int32 = 2
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterUInt16: FfiConverterPrimitive {
+    typealias FfiType = UInt16
+    typealias SwiftType = UInt16
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt16 {
+        try lift(readInt(&buf))
+    }
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterUInt32: FfiConverterPrimitive {
     typealias FfiType = UInt32
     typealias SwiftType = UInt32
@@ -602,7 +618,15 @@ private struct FfiConverterDuration: FfiConverterRustBuffer {
  */
 public protocol ByteStreamReaderProtocol: AnyObject, Sendable {
     /**
+     * Stops reading the stream. See [`TextStreamReader::close`].
+     */
+    func close()
+
+    /**
      * Information about the underlying stream.
+     *
+     * Attributes from the stream's trailer are merged in once it arrives, before the read that
+     * ends the stream returns.
      */
     func info() -> ByteStreamInfo
 
@@ -610,6 +634,14 @@ public protocol ByteStreamReaderProtocol: AnyObject, Sendable {
      * Returns the next chunk, or `None` once the stream has closed.
      */
     func next() async throws -> Bytes?
+
+    /**
+     * Waits for the next progress update, or returns `None` once the stream has ended.
+     *
+     * Progress counts the bytes received from the sender, after decompression, not the bytes
+     * the app has read. See [`TextStreamReader::next_progress`].
+     */
+    func nextProgress() async -> StreamProgress?
 
     /**
      * Reads every chunk, concatenating them into a single buffer returned once the stream closes.
@@ -672,7 +704,21 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
     }
 
     /**
+     * Stops reading the stream. See [`TextStreamReader::close`].
+     */
+    open func close() {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_bytestreamreader_close(
+                self.uniffiCloneHandle(), $0
+            )
+        }
+    }
+
+    /**
      * Information about the underlying stream.
+     *
+     * Attributes from the stream's trailer are merged in once it arrives, before the read that
+     * ends the stream returns.
      */
     open func info() -> ByteStreamInfo {
         try! FfiConverterTypeByteStreamInfo_lift(try! rustCall {
@@ -697,6 +743,27 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
             freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeBytes.lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
+        )
+    }
+
+    /**
+     * Waits for the next progress update, or returns `None` once the stream has ended.
+     *
+     * Progress counts the bytes received from the sender, after decompression, not the bytes
+     * the app has read. See [`TextStreamReader::next_progress`].
+     */
+    open func nextProgress() async -> StreamProgress? {
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_method_bytestreamreader_next_progress(
+                    self.uniffiCloneHandle()
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeStreamProgress.lift,
+            errorHandler: nil
         )
     }
 
@@ -763,9 +830,10 @@ public func FfiConverterTypeByteStreamReader_lower(_ value: ByteStreamReader) ->
  */
 public protocol ByteStreamWriterProtocol: AnyObject, Sendable {
     /**
-     * Closes the stream normally.
+     * Closes the stream. A `reason` closes it abnormally, and `attributes` go in its trailer,
+     * where the receiver merges them into the stream's attributes.
      */
-    func close() async throws
+    func close(reason: String?, attributes: [String: String]) async throws
 
     /**
      * Closes the stream abnormally with a reason.
@@ -843,40 +911,44 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
     }
 
     /**
-     * Closes the stream normally.
+     * Closes the stream. A `reason` closes it abnormally, and `attributes` go in its trailer,
+     * where the receiver merges them into the stream's attributes.
      */
-    open func close() async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_bytestreamwriter_close(
-                    self.uniffiCloneHandle()
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeDataStreamError_lift
-        )
+    open func close(reason: String? = nil, attributes: [String: String] = [:]) async throws {
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_bytestreamwriter_close(
+                        self.uniffiCloneHandle(),
+                        FfiConverterOptionString.lower(reason), FfiConverterDictionaryStringString.lower(attributes)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeDataStreamError_lift
+            )
     }
 
     /**
      * Closes the stream abnormally with a reason.
      */
     open func closeWithReason(reason: String) async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_bytestreamwriter_close_with_reason(
-                    self.uniffiCloneHandle(),
-                    FfiConverterString.lower(reason)
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeDataStreamError_lift
-        )
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_bytestreamwriter_close_with_reason(
+                        self.uniffiCloneHandle(),
+                        FfiConverterString.lower(reason)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeDataStreamError_lift
+            )
     }
 
     /**
@@ -912,19 +984,20 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
      * Appends bytes to the stream.
      */
     open func write(data: Bytes) async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_bytestreamwriter_write(
-                    self.uniffiCloneHandle(),
-                    FfiConverterTypeBytes_lower(data)
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeDataStreamError_lift
-        )
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_bytestreamwriter_write(
+                        self.uniffiCloneHandle(),
+                        FfiConverterTypeBytes_lower(data)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeDataStreamError_lift
+            )
     }
 }
 
@@ -1950,18 +2023,19 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
 
      */
     open func waitForUnpublish() async {
-        try! await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_localdatatrack_wait_for_unpublish(
-                    self.uniffiCloneHandle()
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: nil
-        )
+        return
+            try! await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_localdatatrack_wait_for_unpublish(
+                        self.uniffiCloneHandle()
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: nil
+            )
     }
 }
 
@@ -2460,16 +2534,27 @@ public func FfiConverterTypeLocalDataTrackManagerDelegate_lower(_ value: LocalDa
 public protocol OutgoingDataStreamManagerProtocol: AnyObject, Sendable {
     /**
      * Sends a complete byte payload, returning info about the created stream.
+     *
+     * The whole stream goes to the transport in one delegate call, so `options.progress` gets one
+     * report when the send completes, if set.
      */
     func sendBytes(data: Bytes, options: StreamByteOptions) async throws -> ByteStreamInfo
 
     /**
      * Streams a file from disk, returning info about the created stream.
+     *
+     * `options.progress`, when set, counts file bytes before compression. An uncompressed file
+     * reports after each chunk is sent. A compressed file reports after each encoder drain,
+     * counting the input the encoder consumed, which can run ahead of the chunks sent. Either way,
+     * the whole file is reported only after its last chunk was sent.
      */
     func sendFile(path: String, options: StreamByteOptions) async throws -> ByteStreamInfo
 
     /**
      * Sends a complete text payload, returning info about the created stream.
+     *
+     * The whole stream goes to the transport in one delegate call, so `options.progress` gets one
+     * report when the send completes, if set.
      */
     func sendText(text: String, options: StreamTextOptions) async throws -> TextStreamInfo
 
@@ -2550,6 +2635,9 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
 
     /**
      * Sends a complete byte payload, returning info about the created stream.
+     *
+     * The whole stream goes to the transport in one delegate call, so `options.progress` gets one
+     * report when the send completes, if set.
      */
     open func sendBytes(data: Bytes, options: StreamByteOptions) async throws -> ByteStreamInfo {
         try await uniffiRustCallAsync(
@@ -2569,6 +2657,11 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
 
     /**
      * Streams a file from disk, returning info about the created stream.
+     *
+     * `options.progress`, when set, counts file bytes before compression. An uncompressed file
+     * reports after each chunk is sent. A compressed file reports after each encoder drain,
+     * counting the input the encoder consumed, which can run ahead of the chunks sent. Either way,
+     * the whole file is reported only after its last chunk was sent.
      */
     open func sendFile(path: String, options: StreamByteOptions) async throws -> ByteStreamInfo {
         try await uniffiRustCallAsync(
@@ -2588,6 +2681,9 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
 
     /**
      * Sends a complete text payload, returning info about the created stream.
+     *
+     * The whole stream goes to the transport in one delegate call, so `options.progress` gets one
+     * report when the send completes, if set.
      */
     open func sendText(text: String, options: StreamTextOptions) async throws -> TextStreamInfo {
         try await uniffiRustCallAsync(
@@ -2769,19 +2865,20 @@ open class OutgoingDataStreamManagerDelegateImpl: OutgoingDataStreamManagerDeleg
      * affected stream (`is_open` becomes false for writers).
      */
     open func onPacketsAvailable(packets: [Bytes]) async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_outgoingdatastreammanagerdelegate_on_packets_available(
-                    self.uniffiCloneHandle(),
-                    FfiConverterSequenceTypeBytes.lower(packets)
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypePacketDeliveryError_lift
-        )
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_outgoingdatastreammanagerdelegate_on_packets_available(
+                        self.uniffiCloneHandle(),
+                        FfiConverterSequenceTypeBytes.lower(packets)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypePacketDeliveryError_lift
+            )
     }
 }
 
@@ -3268,18 +3365,19 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
 
      */
     open func waitForUnpublish() async {
-        try! await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_remotedatatrack_wait_for_unpublish(
-                    self.uniffiCloneHandle()
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: nil
-        )
+        return
+            try! await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_remotedatatrack_wait_for_unpublish(
+                        self.uniffiCloneHandle()
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: nil
+            )
     }
 }
 
@@ -4097,11 +4195,659 @@ public func FfiConverterTypeRemoteParticipantRegistryDelegate_lower(_ value: Rem
 }
 
 /**
+ * The server-sent half of a session, pulled one event at a time.
+ *
+ * Pull rather than push: a uniffi callback invoked from a tokio worker aborts the Dart VM
+ * outright, and the underlying receiver already exists, so no delegate is needed.
+ *
+ * The queue behind it is unbounded, so a host that wants no events must release it rather
+ * than leave it undrained: releasing drops the receiver, after which the sender fails cheaply.
+ */
+public protocol SignalEventQueueProtocol: AnyObject, Sendable {
+    /**
+     * Awaits the next event from the server.
+     *
+     * Returns `None` once the session has shut down, which ends the caller's drain loop.
+     * Call [`SignalSession::close`] to end it: releasing the session handle also works, but
+     * only once nothing else holds it. Release this queue last either way, because a caller
+     * blocked here is holding a pointer to it, so freeing it first is a use-after-free.
+     */
+    func nextEvent() async -> SignalEvent?
+}
+
+/**
+ * The server-sent half of a session, pulled one event at a time.
+ *
+ * Pull rather than push: a uniffi callback invoked from a tokio worker aborts the Dart VM
+ * outright, and the underlying receiver already exists, so no delegate is needed.
+ *
+ * The queue behind it is unbounded, so a host that wants no events must release it rather
+ * than leave it undrained: releasing drops the receiver, after which the sender fails cheaply.
+ */
+open class SignalEventQueue: SignalEventQueueProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_signaleventqueue(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_signaleventqueue(handle, $0) }
+    }
+
+    /**
+     * Awaits the next event from the server.
+     *
+     * Returns `None` once the session has shut down, which ends the caller's drain loop.
+     * Call [`SignalSession::close`] to end it: releasing the session handle also works, but
+     * only once nothing else holds it. Release this queue last either way, because a caller
+     * blocked here is holding a pointer to it, so freeing it first is a use-after-free.
+     */
+    open func nextEvent() async -> SignalEvent? {
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_method_signaleventqueue_next_event(
+                    self.uniffiCloneHandle()
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeSignalEvent.lift,
+            errorHandler: nil
+        )
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalEventQueue: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = SignalEventQueue
+
+    public static func lift(_ handle: UInt64) throws -> SignalEventQueue {
+        SignalEventQueue(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: SignalEventQueue) -> UInt64 {
+        value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalEventQueue {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: SignalEventQueue, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalEventQueue_lift(_ handle: UInt64) throws -> SignalEventQueue {
+    try FfiConverterTypeSignalEventQueue.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalEventQueue_lower(_ value: SignalEventQueue) -> UInt64 {
+    FfiConverterTypeSignalEventQueue.lower(value)
+}
+
+/**
+ * A connected signalling session.
+ */
+public protocol SignalSessionProtocol: AnyObject, Sendable {
+    /**
+     * Closes the session and ends its event stream.
+     *
+     * Final: a closed session cannot be resumed with [`restart`](Self::restart).
+     */
+    func close() async
+
+    /**
+     * Whether the underlying WebSocket is currently in place.
+     */
+    func isConnected() async -> Bool
+
+    /**
+     * Whether single peer connection mode is active.
+     */
+    func isSinglePcModeActive() -> Bool
+
+    /**
+     * Returns the next request id, for user-initiated requests and their responses.
+     */
+    func nextRequestId() -> UInt32
+
+    /**
+     * Resumes the session on a new transport, returning an encoded
+     * `livekit.ReconnectResponse`.
+     *
+     * Leaves the session reconnecting: call [`set_reconnected`](Self::set_reconnected) once the
+     * media path is back, or queued requests stay buffered. Fails once the session has been
+     * closed.
+     */
+    func restart(reason: ReconnectReason) async throws -> Bytes
+
+    /**
+     * Sends an encoded `livekit.SignalRequest` to the server.
+     *
+     * Session-scoped requests are queued while a resume is in flight and flushed by
+     * [`set_reconnected`](Self::set_reconnected). Fails with
+     * [`SignalRequestError::Closed`] once the session has been closed, because a request
+     * handed over after that is dropped or queued behind a flush that will never run.
+     */
+    func send(request: Data) async throws
+
+    /**
+     * Marks the resume complete, which flushes requests held during it.
+     */
+    func setReconnected() async
+
+    /**
+     * The last refreshed token, or the initial one if the server has not refreshed it.
+     */
+    func token() -> String
+}
+
+/**
+ * A connected signalling session.
+ */
+open class SignalSession: SignalSessionProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_signalsession(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_signalsession(handle, $0) }
+    }
+
+    /**
+     * Closes the session and ends its event stream.
+     *
+     * Final: a closed session cannot be resumed with [`restart`](Self::restart).
+     */
+    open func close() async {
+        return
+            try! await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_signalsession_close(
+                        self.uniffiCloneHandle()
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: nil
+            )
+    }
+
+    /**
+     * Whether the underlying WebSocket is currently in place.
+     */
+    open func isConnected() async -> Bool {
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_method_signalsession_is_connected(
+                    self.uniffiCloneHandle()
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_i8,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_i8,
+            freeFunc: ffi_livekit_ffi_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
+            errorHandler: nil
+        )
+    }
+
+    /**
+     * Whether single peer connection mode is active.
+     */
+    open func isSinglePcModeActive() -> Bool {
+        try! FfiConverterBool.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_signalsession_is_single_pc_mode_active(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * Returns the next request id, for user-initiated requests and their responses.
+     */
+    open func nextRequestId() -> UInt32 {
+        try! FfiConverterUInt32.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_signalsession_next_request_id(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * Resumes the session on a new transport, returning an encoded
+     * `livekit.ReconnectResponse`.
+     *
+     * Leaves the session reconnecting: call [`set_reconnected`](Self::set_reconnected) once the
+     * media path is back, or queued requests stay buffered. Fails once the session has been
+     * closed.
+     */
+    open func restart(reason: ReconnectReason) async throws -> Bytes {
+        try await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_method_signalsession_restart(
+                    self.uniffiCloneHandle(),
+                    FfiConverterTypeReconnectReason_lower(reason)
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeBytes_lift,
+            errorHandler: FfiConverterTypeSignalError_lift
+        )
+    }
+
+    /**
+     * Sends an encoded `livekit.SignalRequest` to the server.
+     *
+     * Session-scoped requests are queued while a resume is in flight and flushed by
+     * [`set_reconnected`](Self::set_reconnected). Fails with
+     * [`SignalRequestError::Closed`] once the session has been closed, because a request
+     * handed over after that is dropped or queued behind a flush that will never run.
+     */
+    open func send(request: Data) async throws {
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_signalsession_send(
+                        self.uniffiCloneHandle(),
+                        FfiConverterData.lower(request)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeSignalRequestError_lift
+            )
+    }
+
+    /**
+     * Marks the resume complete, which flushes requests held during it.
+     */
+    open func setReconnected() async {
+        return
+            try! await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_signalsession_set_reconnected(
+                        self.uniffiCloneHandle()
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: nil
+            )
+    }
+
+    /**
+     * The last refreshed token, or the initial one if the server has not refreshed it.
+     */
+    open func token() -> String {
+        try! FfiConverterString.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_signalsession_token(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalSession: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = SignalSession
+
+    public static func lift(_ handle: UInt64) throws -> SignalSession {
+        SignalSession(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: SignalSession) -> UInt64 {
+        value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalSession {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: SignalSession, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalSession_lift(_ handle: UInt64) throws -> SignalSession {
+    try FfiConverterTypeSignalSession.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalSession_lower(_ value: SignalSession) -> UInt64 {
+    FfiConverterTypeSignalSession.lower(value)
+}
+
+/**
+ * Receives the progress of an outgoing send, implemented by the foreign side.
+ */
+public protocol StreamProgressDelegate: AnyObject, Sendable {
+    /**
+     * Reports how much of the payload was sent. Called on the thread that polls the send, so it
+     * must return quickly.
+     *
+     * It must not throw. The method returns no error, so UniFFI turns an exception from a Kotlin
+     * or Dart implementation into a Rust panic, and the release profile aborts the process.
+     */
+    func onProgress(progress: StreamProgress)
+}
+
+/**
+ * Receives the progress of an outgoing send, implemented by the foreign side.
+ */
+open class StreamProgressDelegateImpl: StreamProgressDelegate, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_streamprogressdelegate(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_streamprogressdelegate(handle, $0) }
+    }
+
+    /**
+     * Reports how much of the payload was sent. Called on the thread that polls the send, so it
+     * must return quickly.
+     *
+     * It must not throw. The method returns no error, so UniFFI turns an exception from a Kotlin
+     * or Dart implementation into a Rust panic, and the release profile aborts the process.
+     */
+    open func onProgress(progress: StreamProgress) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_streamprogressdelegate_on_progress(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeStreamProgress_lower(progress), $0
+            )
+        }
+    }
+}
+
+/// Put the implementation in a struct so we don't pollute the top-level namespace
+private enum UniffiCallbackInterfaceStreamProgressDelegate {
+    /// Create the VTable using a series of closures.
+    /// Swift automatically converts these into C callback functions.
+    ///
+    /// Store the vtable directly.
+    static let vtable: UniffiVTableCallbackInterfaceStreamProgressDelegate = .init(
+        uniffiFree: { (uniffiHandle: UInt64) in
+            do {
+                try FfiConverterTypeStreamProgressDelegate.handleMap.remove(handle: uniffiHandle)
+            } catch {
+                print("Uniffi callback interface StreamProgressDelegate: handle missing in uniffiFree")
+            }
+        },
+        uniffiClone: { (uniffiHandle: UInt64) -> UInt64 in
+            do {
+                return try FfiConverterTypeStreamProgressDelegate.handleMap.clone(handle: uniffiHandle)
+            } catch {
+                fatalError("Uniffi callback interface StreamProgressDelegate: handle missing in uniffiClone")
+            }
+        },
+        onProgress: { (
+            uniffiHandle: UInt64,
+            progress: RustBuffer,
+            _: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws in
+                guard let uniffiObj = try? FfiConverterTypeStreamProgressDelegate.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.onProgress(
+                    progress: FfiConverterTypeStreamProgress_lift(progress)
+                )
+            }
+
+            let writeReturn = { () }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        }
+    )
+
+    /// Rust stores this pointer for future callback invocations, so it must live
+    /// for the process lifetime (not just for the init function call).
+    static let vtablePtr: UnsafePointer<UniffiVTableCallbackInterfaceStreamProgressDelegate> = {
+        let ptr = UnsafeMutablePointer<UniffiVTableCallbackInterfaceStreamProgressDelegate>.allocate(capacity: 1)
+        ptr.initialize(to: vtable)
+        return UnsafePointer(ptr)
+    }()
+}
+
+private func uniffiCallbackInitStreamProgressDelegate() {
+    uniffi_livekit_ffi_fn_init_callback_vtable_streamprogressdelegate(UniffiCallbackInterfaceStreamProgressDelegate.vtablePtr)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeStreamProgressDelegate: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<StreamProgressDelegate>()
+
+    typealias FfiType = UInt64
+    typealias SwiftType = StreamProgressDelegate
+
+    public static func lift(_ handle: UInt64) throws -> StreamProgressDelegate {
+        if (handle & 1) == 0 {
+            // Rust-generated handle, construct a new class that uses the handle to implement the
+            // interface
+            StreamProgressDelegateImpl(unsafeFromHandle: handle)
+        } else {
+            // Swift-generated handle, get the object from the handle map
+            try handleMap.remove(handle: handle)
+        }
+    }
+
+    public static func lower(_ value: StreamProgressDelegate) -> UInt64 {
+        if let rustImpl = value as? StreamProgressDelegateImpl {
+            // Rust-implemented object.  Clone the handle and return it
+            rustImpl.uniffiCloneHandle()
+        } else {
+            // Swift object, generate a new vtable handle and return that.
+            handleMap.insert(obj: value)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> StreamProgressDelegate {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: StreamProgressDelegate, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeStreamProgressDelegate_lift(_ handle: UInt64) throws -> StreamProgressDelegate {
+    try FfiConverterTypeStreamProgressDelegate.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeStreamProgressDelegate_lower(_ value: StreamProgressDelegate) -> UInt64 {
+    FfiConverterTypeStreamProgressDelegate.lower(value)
+}
+
+/**
  * Reader for an incoming text data stream.
  */
 public protocol TextStreamReaderProtocol: AnyObject, Sendable {
     /**
+     * Stops reading the stream and releases the data it buffered.
+     *
+     * A pending or later `next()` or `read_all()` fails with
+     * [`DataStreamError::AlreadyClosed`], and `next_progress()` returns `None`. The incoming
+     * manager drops the stream at once, even if the sender sends nothing more, and reports it
+     * closed through `on_stream_closed` exactly once. Other streams, including a later one that
+     * reuses this stream's id, are not affected. Returns at once, so it is safe to call from a
+     * cancellation handler.
+     */
+    func close()
+
+    /**
      * Information about the underlying stream.
+     *
+     * Attributes from the stream's trailer are merged in once it arrives, before the read that
+     * ends the stream returns.
      */
     func info() -> TextStreamInfo
 
@@ -4109,6 +4855,16 @@ public protocol TextStreamReaderProtocol: AnyObject, Sendable {
      * Returns the next chunk, or `None` once the stream has closed.
      */
     func next() async throws -> String?
+
+    /**
+     * Waits for the next progress update, or returns `None` once the stream has ended.
+     *
+     * Progress counts the bytes received from the sender, after decompression, not the bytes
+     * the app has read: a chunk counts as soon as it arrives, before `next()` returns it. The
+     * first call returns the current progress at once. Updates that arrive between two calls are
+     * merged into the latest one.
+     */
+    func nextProgress() async -> StreamProgress?
 
     /**
      * Reads every chunk, concatenating them into a single string returned once the stream closes.
@@ -4171,7 +4927,28 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
     }
 
     /**
+     * Stops reading the stream and releases the data it buffered.
+     *
+     * A pending or later `next()` or `read_all()` fails with
+     * [`DataStreamError::AlreadyClosed`], and `next_progress()` returns `None`. The incoming
+     * manager drops the stream at once, even if the sender sends nothing more, and reports it
+     * closed through `on_stream_closed` exactly once. Other streams, including a later one that
+     * reuses this stream's id, are not affected. Returns at once, so it is safe to call from a
+     * cancellation handler.
+     */
+    open func close() {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_textstreamreader_close(
+                self.uniffiCloneHandle(), $0
+            )
+        }
+    }
+
+    /**
      * Information about the underlying stream.
+     *
+     * Attributes from the stream's trailer are merged in once it arrives, before the read that
+     * ends the stream returns.
      */
     open func info() -> TextStreamInfo {
         try! FfiConverterTypeTextStreamInfo_lift(try! rustCall {
@@ -4196,6 +4973,29 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
             freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionString.lift,
             errorHandler: FfiConverterTypeDataStreamError_lift
+        )
+    }
+
+    /**
+     * Waits for the next progress update, or returns `None` once the stream has ended.
+     *
+     * Progress counts the bytes received from the sender, after decompression, not the bytes
+     * the app has read: a chunk counts as soon as it arrives, before `next()` returns it. The
+     * first call returns the current progress at once. Updates that arrive between two calls are
+     * merged into the latest one.
+     */
+    open func nextProgress() async -> StreamProgress? {
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_method_textstreamreader_next_progress(
+                    self.uniffiCloneHandle()
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeStreamProgress.lift,
+            errorHandler: nil
         )
     }
 
@@ -4262,9 +5062,10 @@ public func FfiConverterTypeTextStreamReader_lower(_ value: TextStreamReader) ->
  */
 public protocol TextStreamWriterProtocol: AnyObject, Sendable {
     /**
-     * Closes the stream normally.
+     * Closes the stream. A `reason` closes it abnormally, and `attributes` go in its trailer,
+     * where the receiver merges them into the stream's attributes.
      */
-    func close() async throws
+    func close(reason: String?, attributes: [String: String]) async throws
 
     /**
      * Closes the stream abnormally with a reason.
@@ -4342,40 +5143,44 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
     }
 
     /**
-     * Closes the stream normally.
+     * Closes the stream. A `reason` closes it abnormally, and `attributes` go in its trailer,
+     * where the receiver merges them into the stream's attributes.
      */
-    open func close() async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_textstreamwriter_close(
-                    self.uniffiCloneHandle()
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeDataStreamError_lift
-        )
+    open func close(reason: String? = nil, attributes: [String: String] = [:]) async throws {
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_textstreamwriter_close(
+                        self.uniffiCloneHandle(),
+                        FfiConverterOptionString.lower(reason), FfiConverterDictionaryStringString.lower(attributes)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeDataStreamError_lift
+            )
     }
 
     /**
      * Closes the stream abnormally with a reason.
      */
     open func closeWithReason(reason: String) async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_textstreamwriter_close_with_reason(
-                    self.uniffiCloneHandle(),
-                    FfiConverterString.lower(reason)
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeDataStreamError_lift
-        )
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_textstreamwriter_close_with_reason(
+                        self.uniffiCloneHandle(),
+                        FfiConverterString.lower(reason)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeDataStreamError_lift
+            )
     }
 
     /**
@@ -4411,19 +5216,20 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
      * Appends text to the stream.
      */
     open func write(text: String) async throws {
-        try await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_textstreamwriter_write(
-                    self.uniffiCloneHandle(),
-                    FfiConverterString.lower(text)
-                )
-            },
-            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
-            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
-            freeFunc: ffi_livekit_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeDataStreamError_lift
-        )
+        return
+            try await uniffiRustCallAsync(
+                rustFutureFunc: {
+                    uniffi_livekit_ffi_fn_method_textstreamwriter_write(
+                        self.uniffiCloneHandle(),
+                        FfiConverterString.lower(text)
+                    )
+                },
+                pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+                completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+                freeFunc: ffi_livekit_ffi_rust_future_free_void,
+                liftFunc: { $0 },
+                errorHandler: FfiConverterTypeDataStreamError_lift
+            )
     }
 }
 
@@ -4609,6 +5415,8 @@ public struct Claims: Equatable, Hashable {
     public var kind: String
     public var video: VideoGrants
     public var sip: SipGrants
+    public var inference: InferenceGrants
+    public var observability: ObservabilityGrants
     public var sha256: String
     public var metadata: String
     public var attributes: [String: String]
@@ -4616,7 +5424,7 @@ public struct Claims: Equatable, Hashable {
 
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
-    public init(exp: UInt64, iss: String, nbf: UInt64, sub: String, name: String, kind: String, video: VideoGrants, sip: SipGrants, sha256: String, metadata: String, attributes: [String: String], roomConfiguration: RoomConfiguration?) {
+    public init(exp: UInt64, iss: String, nbf: UInt64, sub: String, name: String, kind: String, video: VideoGrants, sip: SipGrants, inference: InferenceGrants, observability: ObservabilityGrants, sha256: String, metadata: String, attributes: [String: String], roomConfiguration: RoomConfiguration?) {
         self.exp = exp
         self.iss = iss
         self.nbf = nbf
@@ -4625,6 +5433,8 @@ public struct Claims: Equatable, Hashable {
         self.kind = kind
         self.video = video
         self.sip = sip
+        self.inference = inference
+        self.observability = observability
         self.sha256 = sha256
         self.metadata = metadata
         self.attributes = attributes
@@ -4650,6 +5460,8 @@ public struct FfiConverterTypeClaims: FfiConverterRustBuffer {
             kind: FfiConverterString.read(from: &buf),
             video: FfiConverterTypeVideoGrants.read(from: &buf),
             sip: FfiConverterTypeSIPGrants.read(from: &buf),
+            inference: FfiConverterTypeInferenceGrants.read(from: &buf),
+            observability: FfiConverterTypeObservabilityGrants.read(from: &buf),
             sha256: FfiConverterString.read(from: &buf),
             metadata: FfiConverterString.read(from: &buf),
             attributes: FfiConverterDictionaryStringString.read(from: &buf),
@@ -4666,6 +5478,8 @@ public struct FfiConverterTypeClaims: FfiConverterRustBuffer {
         FfiConverterString.write(value.kind, into: &buf)
         FfiConverterTypeVideoGrants.write(value.video, into: &buf)
         FfiConverterTypeSIPGrants.write(value.sip, into: &buf)
+        FfiConverterTypeInferenceGrants.write(value.inference, into: &buf)
+        FfiConverterTypeObservabilityGrants.write(value.observability, into: &buf)
         FfiConverterString.write(value.sha256, into: &buf)
         FfiConverterString.write(value.metadata, into: &buf)
         FfiConverterDictionaryStringString.write(value.attributes, into: &buf)
@@ -5028,6 +5842,55 @@ public func FfiConverterTypeDataTrackSubscribeOptions_lower(_ value: DataTrackSu
     FfiConverterTypeDataTrackSubscribeOptions.lower(value)
 }
 
+/**
+ * Inference grants
+ *
+ * Maps to the JWT's `inference` field.
+
+ */
+public struct InferenceGrants: Equatable, Hashable {
+    public var perform: Bool
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(perform: Bool) {
+        self.perform = perform
+    }
+}
+
+#if compiler(>=6)
+    extension InferenceGrants: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeInferenceGrants: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> InferenceGrants {
+        try InferenceGrants(
+            perform: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: InferenceGrants, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.perform, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeInferenceGrants_lift(_ buf: RustBuffer) throws -> InferenceGrants {
+    try FfiConverterTypeInferenceGrants.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeInferenceGrants_lower(_ value: InferenceGrants) -> RustBuffer {
+    FfiConverterTypeInferenceGrants.lower(value)
+}
+
 public struct LogForwardEntry: Equatable, Hashable {
     public var level: LogForwardLevel
     public var target: String
@@ -5085,6 +5948,55 @@ public func FfiConverterTypeLogForwardEntry_lift(_ buf: RustBuffer) throws -> Lo
 #endif
 public func FfiConverterTypeLogForwardEntry_lower(_ value: LogForwardEntry) -> RustBuffer {
     FfiConverterTypeLogForwardEntry.lower(value)
+}
+
+/**
+ * Observability grants
+ *
+ * Maps to the JWT's `observability` field.
+
+ */
+public struct ObservabilityGrants: Equatable, Hashable {
+    public var write: Bool
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(write: Bool) {
+        self.write = write
+    }
+}
+
+#if compiler(>=6)
+    extension ObservabilityGrants: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObservabilityGrants: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObservabilityGrants {
+        try ObservabilityGrants(
+            write: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObservabilityGrants, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.write, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObservabilityGrants_lift(_ buf: RustBuffer) throws -> ObservabilityGrants {
+    try FfiConverterTypeObservabilityGrants.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObservabilityGrants_lower(_ value: ObservabilityGrants) -> RustBuffer {
+    FfiConverterTypeObservabilityGrants.lower(value)
 }
 
 /**
@@ -5526,9 +6438,249 @@ public func FfiConverterTypeSIPGrants_lower(_ value: SipGrants) -> RustBuffer {
 }
 
 /**
- * Options for sending a byte stream. FFI wrapper around [`ds_api::StreamByteOptions`].
+ * Options for [`connect_signal_session`]. FFI wrapper around [`signaling::SignalOptions`].
  */
-public struct StreamByteOptions: Equatable, Hashable {
+public struct SignalOptions: Equatable, Hashable {
+    public var autoSubscribe: Bool
+    public var adaptiveStream: Bool
+    public var sdkOptions: SignalSdkOptions
+    /**
+     * Enable single peer connection mode.
+     */
+    public var singlePeerConnection: Bool
+    /**
+     * Timeout for each individual connection attempt. `None` uses the crate default.
+     */
+    public var connectTimeout: TimeInterval?
+    /**
+     * Retry a failed connect on the other regions of a LiveKit Cloud project. Turn off when the
+     * caller runs its own region failover, so the two retry loops do not stack.
+     */
+    public var regionFailover: Bool
+    /**
+     * Signal protocol version sent to the server. `None` uses the crate default.
+     */
+    public var protocolVersion: UInt32?
+    /**
+     * Capabilities advertised to the server. `None` uses the crate default, which includes
+     * [`ClientCapability::PacketTrailer`].
+     */
+    public var clientCapabilities: [ClientCapability]?
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(autoSubscribe: Bool = true, adaptiveStream: Bool = false, sdkOptions: SignalSdkOptions,
+                /* 
+                    * Enable single peer connection mode.
+                    */ singlePeerConnection: Bool = false,
+                /* 
+                    * Timeout for each individual connection attempt. `None` uses the crate default.
+                    */ connectTimeout: TimeInterval? = nil,
+                /* 
+                    * Retry a failed connect on the other regions of a LiveKit Cloud project. Turn off when the
+                    * caller runs its own region failover, so the two retry loops do not stack.
+                    */ regionFailover: Bool = true,
+                /* 
+                    * Signal protocol version sent to the server. `None` uses the crate default.
+                    */ protocolVersion: UInt32? = nil,
+                /* 
+                    * Capabilities advertised to the server. `None` uses the crate default, which includes
+                    * [`ClientCapability::PacketTrailer`].
+                    */ clientCapabilities: [ClientCapability]? = nil)
+    {
+        self.autoSubscribe = autoSubscribe
+        self.adaptiveStream = adaptiveStream
+        self.sdkOptions = sdkOptions
+        self.singlePeerConnection = singlePeerConnection
+        self.connectTimeout = connectTimeout
+        self.regionFailover = regionFailover
+        self.protocolVersion = protocolVersion
+        self.clientCapabilities = clientCapabilities
+    }
+}
+
+#if compiler(>=6)
+    extension SignalOptions: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalOptions: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalOptions {
+        try SignalOptions(
+            autoSubscribe: FfiConverterBool.read(from: &buf),
+            adaptiveStream: FfiConverterBool.read(from: &buf),
+            sdkOptions: FfiConverterTypeSignalSdkOptions.read(from: &buf),
+            singlePeerConnection: FfiConverterBool.read(from: &buf),
+            connectTimeout: FfiConverterOptionDuration.read(from: &buf),
+            regionFailover: FfiConverterBool.read(from: &buf),
+            protocolVersion: FfiConverterOptionUInt32.read(from: &buf),
+            clientCapabilities: FfiConverterOptionSequenceTypeClientCapability.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SignalOptions, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.autoSubscribe, into: &buf)
+        FfiConverterBool.write(value.adaptiveStream, into: &buf)
+        FfiConverterTypeSignalSdkOptions.write(value.sdkOptions, into: &buf)
+        FfiConverterBool.write(value.singlePeerConnection, into: &buf)
+        FfiConverterOptionDuration.write(value.connectTimeout, into: &buf)
+        FfiConverterBool.write(value.regionFailover, into: &buf)
+        FfiConverterOptionUInt32.write(value.protocolVersion, into: &buf)
+        FfiConverterOptionSequenceTypeClientCapability.write(value.clientCapabilities, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalOptions_lift(_ buf: RustBuffer) throws -> SignalOptions {
+    try FfiConverterTypeSignalOptions.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalOptions_lower(_ value: SignalOptions) -> RustBuffer {
+    FfiConverterTypeSignalOptions.lower(value)
+}
+
+/**
+ * Identifies the calling SDK to the server. FFI wrapper around
+ * [`signaling::SignalSdkOptions`].
+ */
+public struct SignalSdkOptions: Equatable, Hashable {
+    /**
+     * SDK name, e.g. `"swift"`. Unrecognized names are reported as unknown.
+     */
+    public var sdk: String
+    public var sdkVersion: String?
+    /**
+     * Comma separated list of SDKs layered on top of this one, with versions.
+     */
+    public var otherSdks: String?
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(
+        /* 
+         * SDK name, e.g. `"swift"`. Unrecognized names are reported as unknown.
+         */ sdk: String, sdkVersion: String? = nil,
+        /* 
+            * Comma separated list of SDKs layered on top of this one, with versions.
+            */ otherSdks: String? = nil
+    ) {
+        self.sdk = sdk
+        self.sdkVersion = sdkVersion
+        self.otherSdks = otherSdks
+    }
+}
+
+#if compiler(>=6)
+    extension SignalSdkOptions: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalSdkOptions: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalSdkOptions {
+        try SignalSdkOptions(
+            sdk: FfiConverterString.read(from: &buf),
+            sdkVersion: FfiConverterOptionString.read(from: &buf),
+            otherSdks: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SignalSdkOptions, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.sdk, into: &buf)
+        FfiConverterOptionString.write(value.sdkVersion, into: &buf)
+        FfiConverterOptionString.write(value.otherSdks, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalSdkOptions_lift(_ buf: RustBuffer) throws -> SignalSdkOptions {
+    try FfiConverterTypeSignalSdkOptions.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalSdkOptions_lower(_ value: SignalSdkOptions) -> RustBuffer {
+    FfiConverterTypeSignalSdkOptions.lower(value)
+}
+
+/**
+ * A session and the two handles that drive it, returned by [`connect_signal_session`].
+ */
+public struct SignalSessionConnected {
+    public var session: SignalSession
+    /**
+     * Encoded `livekit.JoinResponse`.
+     */
+    public var joinResponse: Bytes
+    public var events: SignalEventQueue
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(session: SignalSession,
+                /* 
+                    * Encoded `livekit.JoinResponse`.
+                    */ joinResponse: Bytes, events: SignalEventQueue)
+    {
+        self.session = session
+        self.joinResponse = joinResponse
+        self.events = events
+    }
+}
+
+#if compiler(>=6)
+    extension SignalSessionConnected: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalSessionConnected: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalSessionConnected {
+        try SignalSessionConnected(
+            session: FfiConverterTypeSignalSession.read(from: &buf),
+            joinResponse: FfiConverterTypeBytes.read(from: &buf),
+            events: FfiConverterTypeSignalEventQueue.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SignalSessionConnected, into buf: inout [UInt8]) {
+        FfiConverterTypeSignalSession.write(value.session, into: &buf)
+        FfiConverterTypeBytes.write(value.joinResponse, into: &buf)
+        FfiConverterTypeSignalEventQueue.write(value.events, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalSessionConnected_lift(_ buf: RustBuffer) throws -> SignalSessionConnected {
+    try FfiConverterTypeSignalSessionConnected.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalSessionConnected_lower(_ value: SignalSessionConnected) -> RustBuffer {
+    FfiConverterTypeSignalSessionConnected.lower(value)
+}
+
+/**
+ * Converts to [`ds_api::SendByteOptions`] for `send_bytes` and `send_file`, which drop
+ * `total_length`, and to [`ds_api::StreamByteOptions`] for `stream_bytes`, which drops `compress`
+ * and `progress`.
+ */
+public struct StreamByteOptions {
     public var topic: String
     public var attributes: [String: String]
     public var destinationIdentities: [String]
@@ -5538,10 +6690,18 @@ public struct StreamByteOptions: Equatable, Hashable {
     public var totalLength: UInt64?
     public var compress: Bool?
     public var senderIdentity: String?
+    /**
+     * Optional send progress delegate; ignored by incremental `stream_bytes`.
+     */
+    public var progress: StreamProgressDelegate?
 
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
-    public init(topic: String, attributes: [String: String], destinationIdentities: [String] = [], id: String? = nil, mimeType: String? = nil, name: String? = nil, totalLength: UInt64? = nil, compress: Bool? = nil, senderIdentity: String? = nil) {
+    public init(topic: String, attributes: [String: String], destinationIdentities: [String] = [], id: String? = nil, mimeType: String? = nil, name: String? = nil, totalLength: UInt64? = nil, compress: Bool? = nil, senderIdentity: String? = nil,
+                /* 
+                    * Optional send progress delegate; ignored by incremental `stream_bytes`.
+                    */ progress: StreamProgressDelegate? = nil)
+    {
         self.topic = topic
         self.attributes = attributes
         self.destinationIdentities = destinationIdentities
@@ -5551,6 +6711,7 @@ public struct StreamByteOptions: Equatable, Hashable {
         self.totalLength = totalLength
         self.compress = compress
         self.senderIdentity = senderIdentity
+        self.progress = progress
     }
 }
 
@@ -5572,7 +6733,8 @@ public struct FfiConverterTypeStreamByteOptions: FfiConverterRustBuffer {
             name: FfiConverterOptionString.read(from: &buf),
             totalLength: FfiConverterOptionUInt64.read(from: &buf),
             compress: FfiConverterOptionBool.read(from: &buf),
-            senderIdentity: FfiConverterOptionString.read(from: &buf)
+            senderIdentity: FfiConverterOptionString.read(from: &buf),
+            progress: FfiConverterOptionTypeStreamProgressDelegate.read(from: &buf)
         )
     }
 
@@ -5586,6 +6748,7 @@ public struct FfiConverterTypeStreamByteOptions: FfiConverterRustBuffer {
         FfiConverterOptionUInt64.write(value.totalLength, into: &buf)
         FfiConverterOptionBool.write(value.compress, into: &buf)
         FfiConverterOptionString.write(value.senderIdentity, into: &buf)
+        FfiConverterOptionTypeStreamProgressDelegate.write(value.progress, into: &buf)
     }
 }
 
@@ -5604,9 +6767,73 @@ public func FfiConverterTypeStreamByteOptions_lower(_ value: StreamByteOptions) 
 }
 
 /**
- * Options for sending a text stream. FFI wrapper around [`ds_api::StreamTextOptions`].
+ * Progress of a data stream. FFI wrapper around [`ds_api::StreamProgress`].
  */
-public struct StreamTextOptions: Equatable, Hashable {
+public struct StreamProgress: Equatable, Hashable {
+    /**
+     * Bytes received or sent so far, counted before compression.
+     */
+    public var bytesProcessed: UInt64
+    /**
+     * Total bytes expected, or `None` for a stream of unknown length.
+     */
+    public var bytesTotal: UInt64?
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(
+        /* 
+         * Bytes received or sent so far, counted before compression.
+         */ bytesProcessed: UInt64,
+        /* 
+            * Total bytes expected, or `None` for a stream of unknown length.
+            */ bytesTotal: UInt64?
+    ) {
+        self.bytesProcessed = bytesProcessed
+        self.bytesTotal = bytesTotal
+    }
+}
+
+#if compiler(>=6)
+    extension StreamProgress: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeStreamProgress: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> StreamProgress {
+        try StreamProgress(
+            bytesProcessed: FfiConverterUInt64.read(from: &buf),
+            bytesTotal: FfiConverterOptionUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: StreamProgress, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.bytesProcessed, into: &buf)
+        FfiConverterOptionUInt64.write(value.bytesTotal, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeStreamProgress_lift(_ buf: RustBuffer) throws -> StreamProgress {
+    try FfiConverterTypeStreamProgress.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeStreamProgress_lower(_ value: StreamProgress) -> RustBuffer {
+    FfiConverterTypeStreamProgress.lower(value)
+}
+
+/**
+ * Converts to [`ds_api::SendTextOptions`] for `send_text`, which drops `total_length`, and to
+ * [`ds_api::StreamTextOptions`] for `stream_text`, which drops `compress` and `progress`.
+ */
+public struct StreamTextOptions {
     public var topic: String
     public var attributes: [String: String]
     public var destinationIdentities: [String]
@@ -5618,10 +6845,27 @@ public struct StreamTextOptions: Equatable, Hashable {
     public var generated: Bool?
     public var compress: Bool?
     public var senderIdentity: String?
+    /**
+     * Total byte length of the text, when known ahead of time. Used by `stream_text`;
+     * `send_text` sets it from the text it sends.
+     */
+    public var totalLength: UInt64?
+    /**
+     * Optional send progress delegate; ignored by incremental `stream_text`.
+     */
+    public var progress: StreamProgressDelegate?
 
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
-    public init(topic: String, attributes: [String: String], destinationIdentities: [String] = [], id: String? = nil, operationType: OperationType? = nil, version: Int32? = nil, replyToStreamId: String? = nil, attachedStreamIds: [String] = [], generated: Bool? = nil, compress: Bool? = nil, senderIdentity: String? = nil) {
+    public init(topic: String, attributes: [String: String], destinationIdentities: [String] = [], id: String? = nil, operationType: OperationType? = nil, version: Int32? = nil, replyToStreamId: String? = nil, attachedStreamIds: [String] = [], generated: Bool? = nil, compress: Bool? = nil, senderIdentity: String? = nil,
+                /* 
+                    * Total byte length of the text, when known ahead of time. Used by `stream_text`;
+                    * `send_text` sets it from the text it sends.
+                    */ totalLength: UInt64? = nil,
+                /* 
+                    * Optional send progress delegate; ignored by incremental `stream_text`.
+                    */ progress: StreamProgressDelegate? = nil)
+    {
         self.topic = topic
         self.attributes = attributes
         self.destinationIdentities = destinationIdentities
@@ -5633,6 +6877,8 @@ public struct StreamTextOptions: Equatable, Hashable {
         self.generated = generated
         self.compress = compress
         self.senderIdentity = senderIdentity
+        self.totalLength = totalLength
+        self.progress = progress
     }
 }
 
@@ -5656,7 +6902,9 @@ public struct FfiConverterTypeStreamTextOptions: FfiConverterRustBuffer {
             attachedStreamIds: FfiConverterSequenceString.read(from: &buf),
             generated: FfiConverterOptionBool.read(from: &buf),
             compress: FfiConverterOptionBool.read(from: &buf),
-            senderIdentity: FfiConverterOptionString.read(from: &buf)
+            senderIdentity: FfiConverterOptionString.read(from: &buf),
+            totalLength: FfiConverterOptionUInt64.read(from: &buf),
+            progress: FfiConverterOptionTypeStreamProgressDelegate.read(from: &buf)
         )
     }
 
@@ -5672,6 +6920,8 @@ public struct FfiConverterTypeStreamTextOptions: FfiConverterRustBuffer {
         FfiConverterOptionBool.write(value.generated, into: &buf)
         FfiConverterOptionBool.write(value.compress, into: &buf)
         FfiConverterOptionString.write(value.senderIdentity, into: &buf)
+        FfiConverterOptionUInt64.write(value.totalLength, into: &buf)
+        FfiConverterOptionTypeStreamProgressDelegate.write(value.progress, into: &buf)
     }
 }
 
@@ -5796,6 +7046,8 @@ public struct TokenOptions: Equatable, Hashable {
     public var ttl: TimeInterval?
     public var videoGrants: VideoGrants?
     public var sipGrants: SipGrants?
+    public var inferenceGrants: InferenceGrants?
+    public var observabilityGrants: ObservabilityGrants?
     public var identity: String?
     public var name: String?
     public var kind: String?
@@ -5806,10 +7058,12 @@ public struct TokenOptions: Equatable, Hashable {
 
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
-    public init(ttl: TimeInterval? = nil, videoGrants: VideoGrants? = nil, sipGrants: SipGrants? = nil, identity: String? = nil, name: String? = nil, kind: String? = nil, metadata: String? = nil, attributes: [String: String]? = nil, sha256: String? = nil, roomConfiguration: RoomConfiguration? = nil) {
+    public init(ttl: TimeInterval? = nil, videoGrants: VideoGrants? = nil, sipGrants: SipGrants? = nil, inferenceGrants: InferenceGrants? = nil, observabilityGrants: ObservabilityGrants? = nil, identity: String? = nil, name: String? = nil, kind: String? = nil, metadata: String? = nil, attributes: [String: String]? = nil, sha256: String? = nil, roomConfiguration: RoomConfiguration? = nil) {
         self.ttl = ttl
         self.videoGrants = videoGrants
         self.sipGrants = sipGrants
+        self.inferenceGrants = inferenceGrants
+        self.observabilityGrants = observabilityGrants
         self.identity = identity
         self.name = name
         self.kind = kind
@@ -5833,6 +7087,8 @@ public struct FfiConverterTypeTokenOptions: FfiConverterRustBuffer {
             ttl: FfiConverterOptionDuration.read(from: &buf),
             videoGrants: FfiConverterOptionTypeVideoGrants.read(from: &buf),
             sipGrants: FfiConverterOptionTypeSIPGrants.read(from: &buf),
+            inferenceGrants: FfiConverterOptionTypeInferenceGrants.read(from: &buf),
+            observabilityGrants: FfiConverterOptionTypeObservabilityGrants.read(from: &buf),
             identity: FfiConverterOptionString.read(from: &buf),
             name: FfiConverterOptionString.read(from: &buf),
             kind: FfiConverterOptionString.read(from: &buf),
@@ -5847,6 +7103,8 @@ public struct FfiConverterTypeTokenOptions: FfiConverterRustBuffer {
         FfiConverterOptionDuration.write(value.ttl, into: &buf)
         FfiConverterOptionTypeVideoGrants.write(value.videoGrants, into: &buf)
         FfiConverterOptionTypeSIPGrants.write(value.sipGrants, into: &buf)
+        FfiConverterOptionTypeInferenceGrants.write(value.inferenceGrants, into: &buf)
+        FfiConverterOptionTypeObservabilityGrants.write(value.observabilityGrants, into: &buf)
         FfiConverterOptionString.write(value.identity, into: &buf)
         FfiConverterOptionString.write(value.name, into: &buf)
         FfiConverterOptionString.write(value.kind, into: &buf)
@@ -6060,7 +7318,7 @@ public func FfiConverterTypeAccessTokenError_lower(_ value: AccessTokenError) ->
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /* 
- * A capability a remote participant's client advertises, mirroring [`common::ClientCapability`].
+ * A capability a participant's client advertises, mirroring [`common::ClientCapability`].
  */
 
 public enum ClientCapability: Equatable, Hashable {
@@ -6675,6 +7933,345 @@ public func FfiConverterTypePacketDeliveryError_lower(_ value: PacketDeliveryErr
     FfiConverterTypePacketDeliveryError.lower(value)
 }
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/* 
+ * Why the client is resuming its session, reported to the server. Mirrors
+ * [`proto::ReconnectReason`].
+ */
+
+public enum ReconnectReason: Equatable, Hashable {
+    case unknown
+    case signalDisconnected
+    case publisherFailed
+    case subscriberFailed
+    case switchCandidate
+}
+
+#if compiler(>=6)
+    extension ReconnectReason: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeReconnectReason: FfiConverterRustBuffer {
+    typealias SwiftType = ReconnectReason
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ReconnectReason {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        case 1: return .unknown
+
+        case 2: return .signalDisconnected
+
+        case 3: return .publisherFailed
+
+        case 4: return .subscriberFailed
+
+        case 5: return .switchCandidate
+
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ReconnectReason, into buf: inout [UInt8]) {
+        switch value {
+        case .unknown:
+            writeInt(&buf, Int32(1))
+
+        case .signalDisconnected:
+            writeInt(&buf, Int32(2))
+
+        case .publisherFailed:
+            writeInt(&buf, Int32(3))
+
+        case .subscriberFailed:
+            writeInt(&buf, Int32(4))
+
+        case .switchCandidate:
+            writeInt(&buf, Int32(5))
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeReconnectReason_lift(_ buf: RustBuffer) throws -> ReconnectReason {
+    try FfiConverterTypeReconnectReason.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeReconnectReason_lower(_ value: ReconnectReason) -> RustBuffer {
+    FfiConverterTypeReconnectReason.lower(value)
+}
+
+/**
+ * A signalling operation failed.
+ *
+ * Only the cases a caller can act on differently are broken out; everything else arrives as
+ * [`Other`](Self::Other) carrying the underlying message.
+ */
+public enum SignalError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+    case Client(status: UInt16, body: String)
+    case Server(status: UInt16, body: String)
+    /**
+     * HTTP status from a failed WebSocket upgrade. Retryable, unlike
+     * [`Client`](Self::Client) with a 401 or 403.
+     */
+    case Handshake(status: UInt16)
+    /**
+     * No network transport is registered. Permanent: register one with
+     * [`livekit_net::set_ws_client`] rather than retrying.
+     */
+    case TransportNotConfigured
+    /**
+     * The server asked the client to leave during a resume. `disconnect_reason` and `action`
+     * are the numeric values of `livekit.DisconnectReason` and `livekit.LeaveRequest.Action`.
+     */
+    case LeaveRequest(disconnectReason: Int32, action: Int32)
+    /**
+     * The URL, token or publisher offer passed in is malformed. Permanent: retrying with the
+     * same input fails the same way.
+     */
+    case InvalidInput(reason: String)
+    /**
+     * Everything else: a decode failure, a timeout, a dead transport, or a panic in the task
+     * running the operation.
+     */
+    case Other(reason: String)
+
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+#if compiler(>=6)
+    extension SignalError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalError: FfiConverterRustBuffer {
+    typealias SwiftType = SignalError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        case 1: return try .Client(
+                status: FfiConverterUInt16.read(from: &buf),
+                body: FfiConverterString.read(from: &buf)
+            )
+        case 2: return try .Server(
+                status: FfiConverterUInt16.read(from: &buf),
+                body: FfiConverterString.read(from: &buf)
+            )
+        case 3: return try .Handshake(
+                status: FfiConverterUInt16.read(from: &buf)
+            )
+        case 4: return .TransportNotConfigured
+        case 5: return try .LeaveRequest(
+                disconnectReason: FfiConverterInt32.read(from: &buf),
+                action: FfiConverterInt32.read(from: &buf)
+            )
+        case 6: return try .InvalidInput(
+                reason: FfiConverterString.read(from: &buf)
+            )
+        case 7: return try .Other(
+                reason: FfiConverterString.read(from: &buf)
+            )
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: SignalError, into buf: inout [UInt8]) {
+        switch value {
+        case let .Client(status, body):
+            writeInt(&buf, Int32(1))
+            FfiConverterUInt16.write(status, into: &buf)
+            FfiConverterString.write(body, into: &buf)
+
+        case let .Server(status, body):
+            writeInt(&buf, Int32(2))
+            FfiConverterUInt16.write(status, into: &buf)
+            FfiConverterString.write(body, into: &buf)
+
+        case let .Handshake(status):
+            writeInt(&buf, Int32(3))
+            FfiConverterUInt16.write(status, into: &buf)
+
+        case .TransportNotConfigured:
+            writeInt(&buf, Int32(4))
+
+        case let .LeaveRequest(disconnectReason, action):
+            writeInt(&buf, Int32(5))
+            FfiConverterInt32.write(disconnectReason, into: &buf)
+            FfiConverterInt32.write(action, into: &buf)
+
+        case let .InvalidInput(reason):
+            writeInt(&buf, Int32(6))
+            FfiConverterString.write(reason, into: &buf)
+
+        case let .Other(reason):
+            writeInt(&buf, Int32(7))
+            FfiConverterString.write(reason, into: &buf)
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalError_lift(_ buf: RustBuffer) throws -> SignalError {
+    try FfiConverterTypeSignalError.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalError_lower(_ value: SignalError) -> RustBuffer {
+    FfiConverterTypeSignalError.lower(value)
+}
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/* 
+ * An item from a session's event stream; see [`SignalEventQueue::next_event`].
+ */
+
+public enum SignalEvent: Equatable, Hashable {
+    /**
+     * An encoded `livekit.SignalResponse` from the server.
+     */
+    case signal(payload: Bytes)
+    /**
+     * The signalling link was lost: start a resume with [`SignalSession::restart`].
+     *
+     * Never sent for a requested [`SignalSession::close`] or [`SignalSession::restart`], so a
+     * host can treat every `Closed` as a lost link without filtering its own teardown.
+     */
+    case closed(reason: String)
+}
+
+#if compiler(>=6)
+    extension SignalEvent: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalEvent: FfiConverterRustBuffer {
+    typealias SwiftType = SignalEvent
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalEvent {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        case 1: return try .signal(payload: FfiConverterTypeBytes.read(from: &buf))
+
+        case 2: return try .closed(reason: FfiConverterString.read(from: &buf))
+
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: SignalEvent, into buf: inout [UInt8]) {
+        switch value {
+        case let .signal(payload):
+            writeInt(&buf, Int32(1))
+            FfiConverterTypeBytes.write(payload, into: &buf)
+
+        case let .closed(reason):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(reason, into: &buf)
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalEvent_lift(_ buf: RustBuffer) throws -> SignalEvent {
+    try FfiConverterTypeSignalEvent.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalEvent_lower(_ value: SignalEvent) -> RustBuffer {
+    FfiConverterTypeSignalEvent.lower(value)
+}
+
+/**
+ * A request handed to [`SignalSession::send`] could not be sent.
+ */
+public enum SignalRequestError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+    case Decode(reason: String)
+    case EmptyRequest
+    /**
+     * The session is closed, so the request would have been discarded.
+     */
+    case Closed
+
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+#if compiler(>=6)
+    extension SignalRequestError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSignalRequestError: FfiConverterRustBuffer {
+    typealias SwiftType = SignalRequestError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignalRequestError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        case 1: return try .Decode(
+                reason: FfiConverterString.read(from: &buf)
+            )
+        case 2: return .EmptyRequest
+        case 3: return .Closed
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: SignalRequestError, into buf: inout [UInt8]) {
+        switch value {
+        case let .Decode(reason):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(reason, into: &buf)
+
+        case .EmptyRequest:
+            writeInt(&buf, Int32(2))
+
+        case .Closed:
+            writeInt(&buf, Int32(3))
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalRequestError_lift(_ buf: RustBuffer) throws -> SignalRequestError {
+    try FfiConverterTypeSignalRequestError.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSignalRequestError_lower(_ value: SignalRequestError) -> RustBuffer {
+    FfiConverterTypeSignalRequestError.lower(value)
+}
+
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
@@ -6692,8 +8289,8 @@ private struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterUInt32.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterUInt32.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6716,8 +8313,8 @@ private struct FfiConverterOptionInt32: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterInt32.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterInt32.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6740,8 +8337,8 @@ private struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterUInt64.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterUInt64.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6764,8 +8361,8 @@ private struct FfiConverterOptionBool: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterBool.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterBool.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6788,8 +8385,32 @@ private struct FfiConverterOptionString: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterString.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterString.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionData: FfiConverterRustBuffer {
+    typealias SwiftType = Data?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterData.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterData.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6812,8 +8433,8 @@ private struct FfiConverterOptionDuration: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterDuration.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterDuration.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6836,8 +8457,8 @@ private struct FfiConverterOptionTypeDecryptionProvider: FfiConverterRustBuffer 
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeDecryptionProvider.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeDecryptionProvider.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6860,8 +8481,8 @@ private struct FfiConverterOptionTypeEncryptionProvider: FfiConverterRustBuffer 
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeEncryptionProvider.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeEncryptionProvider.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6884,8 +8505,32 @@ private struct FfiConverterOptionTypeByteStreamReader: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeByteStreamReader.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeByteStreamReader.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeStreamProgressDelegate: FfiConverterRustBuffer {
+    typealias SwiftType = StreamProgressDelegate?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeStreamProgressDelegate.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeStreamProgressDelegate.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6908,8 +8553,8 @@ private struct FfiConverterOptionTypeTextStreamReader: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeTextStreamReader.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeTextStreamReader.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6932,8 +8577,8 @@ private struct FfiConverterOptionTypeApiCredentials: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeApiCredentials.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeApiCredentials.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6956,8 +8601,8 @@ private struct FfiConverterOptionTypeClosedStream: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeClosedStream.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeClosedStream.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6980,8 +8625,8 @@ private struct FfiConverterOptionTypeDataTrackFrame: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeDataTrackFrame.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeDataTrackFrame.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7004,8 +8649,32 @@ private struct FfiConverterOptionTypeDataTrackSchemaId: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeDataTrackSchemaId.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeDataTrackSchemaId.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeInferenceGrants: FfiConverterRustBuffer {
+    typealias SwiftType = InferenceGrants?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeInferenceGrants.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeInferenceGrants.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7028,8 +8697,32 @@ private struct FfiConverterOptionTypeLogForwardEntry: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeLogForwardEntry.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeLogForwardEntry.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeObservabilityGrants: FfiConverterRustBuffer {
+    typealias SwiftType = ObservabilityGrants?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeObservabilityGrants.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeObservabilityGrants.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7052,8 +8745,8 @@ private struct FfiConverterOptionTypeOpenedStream: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeOpenedStream.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeOpenedStream.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7076,8 +8769,8 @@ private struct FfiConverterOptionTypeRoomConfiguration: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeRoomConfiguration.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeRoomConfiguration.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7100,8 +8793,32 @@ private struct FfiConverterOptionTypeSIPGrants: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeSIPGrants.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeSIPGrants.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeStreamProgress: FfiConverterRustBuffer {
+    typealias SwiftType = StreamProgress?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeStreamProgress.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeStreamProgress.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7124,8 +8841,8 @@ private struct FfiConverterOptionTypeVideoGrants: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeVideoGrants.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeVideoGrants.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7148,8 +8865,8 @@ private struct FfiConverterOptionTypeDataTrackFrameEncoding: FfiConverterRustBuf
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeDataTrackFrameEncoding.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeDataTrackFrameEncoding.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7172,8 +8889,56 @@ private struct FfiConverterOptionTypeOperationType: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeOperationType.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeOperationType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeSignalEvent: FfiConverterRustBuffer {
+    typealias SwiftType = SignalEvent?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeSignalEvent.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeSignalEvent.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionSequenceTypeClientCapability: FfiConverterRustBuffer {
+    typealias SwiftType = [ClientCapability]?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypeClientCapability.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterSequenceTypeClientCapability.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7196,8 +8961,8 @@ private struct FfiConverterOptionSequenceTypeBytes: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterSequenceTypeBytes.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterSequenceTypeBytes.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7220,8 +8985,8 @@ private struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuffer 
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterDictionaryStringString.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterDictionaryStringString.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7244,8 +9009,8 @@ private struct FfiConverterOptionTypeBytes: FfiConverterRustBuffer {
 
     static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeBytes.read(from: &buf)
+        case 0: nil
+        case 1: try FfiConverterTypeBytes.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -7392,7 +9157,7 @@ public struct FfiConverterTypeDataTrackSid: FfiConverter {
     }
 
     public static func write(_ value: DataTrackSid, into buf: inout [UInt8]) {
-        FfiConverterString.write(value, into: &buf)
+        return FfiConverterString.write(value, into: &buf)
     }
 
     public static func lift(_ value: RustBuffer) throws -> DataTrackSid {
@@ -7686,6 +9451,25 @@ public func logForwardReceive() async -> LogForwardEntry? {
     )
 }
 
+/**
+ * Connects a signalling session to `url`.
+ *
+ * `publisher_offer` is an encoded `livekit.SessionDescription`, used by single peer connection
+ * mode. The host must have registered a transport with [`livekit_net::set_ws_client`].
+ */
+public func connectSignalSession(url: String, token: String, options: SignalOptions, publisherOffer: Data?) async throws -> SignalSessionConnected {
+    try await uniffiRustCallAsync(
+        rustFutureFunc: {
+            uniffi_livekit_ffi_fn_func_connect_signal_session(FfiConverterString.lower(url), FfiConverterString.lower(token), FfiConverterTypeSignalOptions_lower(options), FfiConverterOptionData.lower(publisherOffer))
+        },
+        pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+        completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+        freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
+        liftFunc: FfiConverterTypeSignalSessionConnected_lift,
+        errorHandler: FfiConverterTypeSignalError_lift
+    )
+}
+
 private enum InitializationResult {
     case ok
     case contractVersionMismatch
@@ -7726,10 +9510,19 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_func_log_forward_receive() != 7577 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_bytestreamreader_info() != 4408 {
+    if uniffi_livekit_ffi_checksum_func_connect_signal_session() != 41195 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_bytestreamreader_close() != 35013 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_bytestreamreader_info() != 36998 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_bytestreamreader_next() != 17127 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_bytestreamreader_next_progress() != 50770 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_bytestreamreader_read_all() != 38480 {
@@ -7756,16 +9549,22 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_incomingdatastreammanagerdelegate_on_stream_closed() != 16465 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_textstreamreader_info() != 7073 {
+    if uniffi_livekit_ffi_checksum_method_textstreamreader_close() != 2590 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_textstreamreader_info() != 3060 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_textstreamreader_next() != 53122 {
         return InitializationResult.apiChecksumMismatch
     }
+    if uniffi_livekit_ffi_checksum_method_textstreamreader_next_progress() != 21672 {
+        return InitializationResult.apiChecksumMismatch
+    }
     if uniffi_livekit_ffi_checksum_method_textstreamreader_read_all() != 50865 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_close() != 54450 {
+    if uniffi_livekit_ffi_checksum_method_bytestreamwriter_close() != 30568 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_bytestreamwriter_close_with_reason() != 31420 {
@@ -7780,13 +9579,13 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_bytestreamwriter_write() != 54056 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_bytes() != 59992 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_bytes() != 62457 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_file() != 63766 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_file() != 8076 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_text() != 10674 {
+    if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_send_text() != 50626 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_outgoingdatastreammanager_stream_bytes() != 9777 {
@@ -7807,7 +9606,10 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_remoteparticipantregistrydelegate_remote_identities() != 9949 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_textstreamwriter_close() != 8496 {
+    if uniffi_livekit_ffi_checksum_method_streamprogressdelegate_on_progress() != 36437 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_textstreamwriter_close() != 49905 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_textstreamwriter_close_with_reason() != 39956 {
@@ -7921,6 +9723,33 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_unpublished() != 9643 {
         return InitializationResult.apiChecksumMismatch
     }
+    if uniffi_livekit_ffi_checksum_method_signaleventqueue_next_event() != 5226 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_close() != 55622 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_is_connected() != 44000 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_is_single_pc_mode_active() != 45751 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_next_request_id() != 22887 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_restart() != 37851 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_send() != 18594 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_set_reconnected() != 48044 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_signalsession_token() != 61772 {
+        return InitializationResult.apiChecksumMismatch
+    }
     if uniffi_livekit_ffi_checksum_constructor_incomingdatastreammanager_new() != 34777 {
         return InitializationResult.apiChecksumMismatch
     }
@@ -7939,6 +9768,7 @@ private let initializationResult: InitializationResult = {
     uniffiCallbackInitOutgoingDataStreamManagerDelegate()
     uniffiCallbackInitRemoteDataTrackManagerDelegate()
     uniffiCallbackInitRemoteParticipantRegistryDelegate()
+    uniffiCallbackInitStreamProgressDelegate()
     uniffiEnsureLivekitCommonInitialized()
     uniffiEnsureLivekitDatatrackInitialized()
     return InitializationResult.ok

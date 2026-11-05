@@ -24,8 +24,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "RustLiveKitFFI",
-            url: "https://github.com/livekit/livekit-ffi-xcframework/releases/download/0.13.2/RustLiveKitFFI.xcframework.zip",
-            checksum: "ebf3fa1f173150a59bee62f5dfa2f398ce7b74253c7ff49f403252ab448db21f"
+            url: "https://github.com/livekit/livekit-ffi-xcframework/releases/download/0.13.4/RustLiveKitFFI.xcframework.zip",
+            checksum: "8ce8b56643a331f102ec7dc9430c88e98b02dae05ab31eb6e0e01242632ddb3b"
         )
     ],
     // Workaround for cargo-swift pinning uniffi_bindgen 0.31.1: its generated
