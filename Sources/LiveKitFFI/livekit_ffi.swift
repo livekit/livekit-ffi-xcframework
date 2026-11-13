@@ -5341,7 +5341,7 @@ public struct ByteStreamInfo: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(id: String, topic: String,
-                /* 
+                /*
                     * Unix timestamp in milliseconds.
                     */ timestampMs: Int64, totalLength: UInt64?, attributes: [String: String], mimeType: String, name: String, encryptionType: EncryptionType)
     {
@@ -5518,10 +5518,10 @@ public struct ClosedStream: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(
-        /* 
+        /*
          * Id of the stream that closed.
          */ streamId: String,
-        /* 
+        /*
             * Identity of the participant that opened the stream.
             */ identity: String
     ) {
@@ -5801,7 +5801,7 @@ public struct DataTrackSubscribeOptions: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(
-        /* 
+        /*
          * Maximum number of received frames buffered internally. Zero is clamped to one.
          */ bufferSize: UInt32 = UInt32(16)
     ) {
@@ -6022,13 +6022,13 @@ public struct OpenedStream {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(
-        /* 
+        /*
          * Identity of the participant that opened the stream.
          */ identity: String,
-        /* 
+        /*
             * Set when the stream carries bytes.
             */ byteReader: ByteStreamReader?,
-        /* 
+        /*
             * Set when the stream carries text.
             */ textReader: TextStreamReader?
     ) {
@@ -6193,7 +6193,7 @@ public struct RemoteDataTrackPipelineOptions: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(
-        /* 
+        /*
          * Maximum number of partial frames the depacketizer will track concurrently for this track.
          *
          * Higher values give more out-of-order tolerance for high-frequency senders at the cost of
@@ -6250,15 +6250,17 @@ public struct RoomAgentDispatch: Equatable, Hashable {
     public var restartPolicy: Int32
     public var deployment: String
     public var attributes: [String: String]
+    public var threadId: String
 
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
-    public init(agentName: String, metadata: String, restartPolicy: Int32, deployment: String, attributes: [String: String]) {
+    public init(agentName: String, metadata: String, restartPolicy: Int32, deployment: String, attributes: [String: String], threadId: String) {
         self.agentName = agentName
         self.metadata = metadata
         self.restartPolicy = restartPolicy
         self.deployment = deployment
         self.attributes = attributes
+        self.threadId = threadId
     }
 }
 
@@ -6276,7 +6278,8 @@ public struct FfiConverterTypeRoomAgentDispatch: FfiConverterRustBuffer {
             metadata: FfiConverterString.read(from: &buf),
             restartPolicy: FfiConverterInt32.read(from: &buf),
             deployment: FfiConverterString.read(from: &buf),
-            attributes: FfiConverterDictionaryStringString.read(from: &buf)
+            attributes: FfiConverterDictionaryStringString.read(from: &buf),
+            threadId: FfiConverterString.read(from: &buf)
         )
     }
 
@@ -6286,6 +6289,7 @@ public struct FfiConverterTypeRoomAgentDispatch: FfiConverterRustBuffer {
         FfiConverterInt32.write(value.restartPolicy, into: &buf)
         FfiConverterString.write(value.deployment, into: &buf)
         FfiConverterDictionaryStringString.write(value.attributes, into: &buf)
+        FfiConverterString.write(value.threadId, into: &buf)
     }
 }
 
@@ -6470,20 +6474,20 @@ public struct SignalOptions: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(autoSubscribe: Bool = true, adaptiveStream: Bool = false, sdkOptions: SignalSdkOptions,
-                /* 
+                /*
                     * Enable single peer connection mode.
                     */ singlePeerConnection: Bool = false,
-                /* 
+                /*
                     * Timeout for each individual connection attempt. `None` uses the crate default.
                     */ connectTimeout: TimeInterval? = nil,
-                /* 
+                /*
                     * Retry a failed connect on the other regions of a LiveKit Cloud project. Turn off when the
                     * caller runs its own region failover, so the two retry loops do not stack.
                     */ regionFailover: Bool = true,
-                /* 
+                /*
                     * Signal protocol version sent to the server. `None` uses the crate default.
                     */ protocolVersion: UInt32? = nil,
-                /* 
+                /*
                     * Capabilities advertised to the server. `None` uses the crate default, which includes
                     * [`ClientCapability::PacketTrailer`].
                     */ clientCapabilities: [ClientCapability]? = nil)
@@ -6564,10 +6568,10 @@ public struct SignalSdkOptions: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(
-        /* 
+        /*
          * SDK name, e.g. `"swift"`. Unrecognized names are reported as unknown.
          */ sdk: String, sdkVersion: String? = nil,
-        /* 
+        /*
             * Comma separated list of SDKs layered on top of this one, with versions.
             */ otherSdks: String? = nil
     ) {
@@ -6628,7 +6632,7 @@ public struct SignalSessionConnected {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(session: SignalSession,
-                /* 
+                /*
                     * Encoded `livekit.JoinResponse`.
                     */ joinResponse: Bytes, events: SignalEventQueue)
     {
@@ -6698,7 +6702,7 @@ public struct StreamByteOptions {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(topic: String, attributes: [String: String], destinationIdentities: [String] = [], id: String? = nil, mimeType: String? = nil, name: String? = nil, totalLength: UInt64? = nil, compress: Bool? = nil, senderIdentity: String? = nil,
-                /* 
+                /*
                     * Optional send progress delegate; ignored by incremental `stream_bytes`.
                     */ progress: StreamProgressDelegate? = nil)
     {
@@ -6782,10 +6786,10 @@ public struct StreamProgress: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(
-        /* 
+        /*
          * Bytes received or sent so far, counted before compression.
          */ bytesProcessed: UInt64,
-        /* 
+        /*
             * Total bytes expected, or `None` for a stream of unknown length.
             */ bytesTotal: UInt64?
     ) {
@@ -6858,11 +6862,11 @@ public struct StreamTextOptions {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(topic: String, attributes: [String: String], destinationIdentities: [String] = [], id: String? = nil, operationType: OperationType? = nil, version: Int32? = nil, replyToStreamId: String? = nil, attachedStreamIds: [String] = [], generated: Bool? = nil, compress: Bool? = nil, senderIdentity: String? = nil,
-                /* 
+                /*
                     * Total byte length of the text, when known ahead of time. Used by `stream_text`;
                     * `send_text` sets it from the text it sends.
                     */ totalLength: UInt64? = nil,
-                /* 
+                /*
                     * Optional send progress delegate; ignored by incremental `stream_text`.
                     */ progress: StreamProgressDelegate? = nil)
     {
@@ -6962,7 +6966,7 @@ public struct TextStreamInfo: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(id: String, topic: String,
-                /* 
+                /*
                     * Unix timestamp in milliseconds.
                     */ timestampMs: Int64, totalLength: UInt64?, attributes: [String: String], mimeType: String, operationType: OperationType, version: Int32, replyToStreamId: String?, attachedStreamIds: [String], generated: Bool, encryptionType: EncryptionType)
     {
@@ -7317,7 +7321,7 @@ public func FfiConverterTypeAccessTokenError_lower(_ value: AccessTokenError) ->
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * A capability a participant's client advertises, mirroring [`common::ClientCapability`].
  */
 
@@ -7516,7 +7520,7 @@ public func FfiConverterTypeDataStreamError_lower(_ value: DataStreamError) -> R
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * Encryption applied to a data stream, mirroring [`common::EncryptionType`].
  */
 
@@ -7807,7 +7811,7 @@ public func FfiConverterTypeLogForwardLevel_lower(_ value: LogForwardLevel) -> R
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * Operation type for text streams, mirroring [`ds_api::OperationType`].
  */
 
@@ -7935,7 +7939,7 @@ public func FfiConverterTypePacketDeliveryError_lower(_ value: PacketDeliveryErr
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * Why the client is resuming its session, reported to the server. Mirrors
  * [`proto::ReconnectReason`].
  */
@@ -8139,7 +8143,7 @@ public func FfiConverterTypeSignalError_lower(_ value: SignalError) -> RustBuffe
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * An item from a session's event stream; see [`SignalEventQueue::next_event`].
  */
 

@@ -1,7 +1,7 @@
 # Generated from Rust template
 Pod::Spec.new do |spec|
   spec.name = "LiveKitFFI"
-  spec.version = "0.13.4"
+  spec.version = "0.14.0"
   spec.summary = "LiveKit FFI bindings"
   spec.description = <<-DESC
     LiveKit FFI XCFramework with Swift bindings
@@ -12,6 +12,7 @@ Pod::Spec.new do |spec|
 
   spec.ios.deployment_target = "13.0"
   spec.osx.deployment_target = "10.15"
+  spec.swift_versions = ['5.0']
 
   spec.source = {
     :git => "https://github.com/livekit/livekit-ffi-xcframework.git",
