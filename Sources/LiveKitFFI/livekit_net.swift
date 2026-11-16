@@ -545,10 +545,18 @@ private struct FfiConverterData: FfiConverterRustBuffer {
  * Implementors provide the single [`request`](HttpClient::request) primitive;
  * [`HttpClientExt`] layers `get`/`post` on top, so adding verbs never widens the
  * implementation (or, for foreign impls, the FFI) surface.
+ *
+ * Every response is an answer, whatever its status: return a 4xx or 5xx as an
+ * [`HttpResponse`] with its status, headers and body, so the caller can read
+ * `Retry-After`, an error body or a refusal's text. Fail only when there was
+ * no response (no connection, a timeout, a request that could not be made).
+ * `TransportError::Http` is not that answer: a host client that returns it
+ * for a non-2xx discards what the caller needs to classify the failure.
  */
 public protocol HttpClient: AnyObject, Sendable {
     /**
-     * Perform one HTTP request, sending `body` if present.
+     * Perform one HTTP request, sending `body` if present. A non-2xx status
+     * is returned as an [`HttpResponse`], not an error.
      */
     func request(method: HttpMethod, url: String, headers: [Header], body: Data?) async throws -> HttpResponse
 }
@@ -561,6 +569,13 @@ public protocol HttpClient: AnyObject, Sendable {
  * Implementors provide the single [`request`](HttpClient::request) primitive;
  * [`HttpClientExt`] layers `get`/`post` on top, so adding verbs never widens the
  * implementation (or, for foreign impls, the FFI) surface.
+ *
+ * Every response is an answer, whatever its status: return a 4xx or 5xx as an
+ * [`HttpResponse`] with its status, headers and body, so the caller can read
+ * `Retry-After`, an error body or a refusal's text. Fail only when there was
+ * no response (no connection, a timeout, a request that could not be made).
+ * `TransportError::Http` is not that answer: a host client that returns it
+ * for a non-2xx discards what the caller needs to classify the failure.
  */
 open class HttpClientImpl: HttpClient, @unchecked Sendable {
     fileprivate let handle: UInt64
@@ -614,7 +629,8 @@ open class HttpClientImpl: HttpClient, @unchecked Sendable {
     }
 
     /**
-     * Perform one HTTP request, sending `body` if present.
+     * Perform one HTTP request, sending `body` if present. A non-2xx status
+     * is returned as an [`HttpResponse`], not an error.
      */
     open func request(method: HttpMethod, url: String, headers: [Header], body: Data?) async throws -> HttpResponse {
         try await uniffiRustCallAsync(
@@ -1407,7 +1423,7 @@ public struct HttpResponse: Equatable, Hashable {
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
     public init(status: UInt16,
-                /* 
+                /*
                     * Response headers, in receipt order. Lets callers read e.g. `Cache-Control`.
                     */ headers: [Header], body: Data)
     {
@@ -1505,7 +1521,7 @@ public func FfiConverterTypeWsConnectResult_lower(_ value: WsConnectResult) -> R
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * The HTTP method for an [`HttpClient::request`].
  */
 
@@ -1567,6 +1583,10 @@ public enum TransportError: Swift.Error, Equatable, Hashable, Foundation.Localiz
     case Timeout
     case Connection(String)
     case Http(status: UInt16)
+    /**
+     * An opt-in decoded response limit was exceeded; headers remain available for retry hints.
+     */
+    case ResponseTooLarge(headers: [Header])
     case Closed
     case Other(String)
 
@@ -1595,8 +1615,11 @@ public struct FfiConverterTypeTransportError: FfiConverterRustBuffer {
         case 3: return try .Http(
                 status: FfiConverterUInt16.read(from: &buf)
             )
-        case 4: return .Closed
-        case 5: return try .Other(
+        case 4: return try .ResponseTooLarge(
+                headers: FfiConverterSequenceTypeHeader.read(from: &buf)
+            )
+        case 5: return .Closed
+        case 6: return try .Other(
                 FfiConverterString.read(from: &buf)
             )
         default: throw UniffiInternalError.unexpectedEnumCase
@@ -1616,11 +1639,15 @@ public struct FfiConverterTypeTransportError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(3))
             FfiConverterUInt16.write(status, into: &buf)
 
-        case .Closed:
+        case let .ResponseTooLarge(headers):
             writeInt(&buf, Int32(4))
+            FfiConverterSequenceTypeHeader.write(headers, into: &buf)
+
+        case .Closed:
+            writeInt(&buf, Int32(5))
 
         case let .Other(v1):
-            writeInt(&buf, Int32(5))
+            writeInt(&buf, Int32(6))
             FfiConverterString.write(v1, into: &buf)
         }
     }
@@ -1951,7 +1978,7 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_net_checksum_func_set_ws_client() != 25157 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_net_checksum_method_httpclient_request() != 22088 {
+    if uniffi_livekit_net_checksum_method_httpclient_request() != 64540 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_net_checksum_method_wsclient_connect() != 54712 {

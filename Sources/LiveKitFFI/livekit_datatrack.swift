@@ -946,7 +946,7 @@ public func FfiConverterTypeEncryptedPayload_lower(_ value: EncryptedPayload) ->
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * Encoding used for frames pushed on a data track.
  *
  * The serialization format of the frame bytes (e.g. [`Protobuf`]); the structure
@@ -1095,7 +1095,7 @@ public func FfiConverterTypeDataTrackFrameEncoding_lower(_ value: DataTrackFrame
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/* 
+/*
  * Encoding used for a schema definition.
  *
  * Identifies the interface definition language the schema is written in (e.g. a
