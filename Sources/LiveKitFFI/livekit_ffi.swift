@@ -505,6 +505,22 @@ private struct FfiConverterInt64: FfiConverterPrimitive {
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterDouble: FfiConverterPrimitive {
+    typealias FfiType = Double
+    typealias SwiftType = Double
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Double {
+        try lift(readDouble(&buf))
+    }
+
+    static func write(_ value: Double, into buf: inout [UInt8]) {
+        writeDouble(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterBool: FfiConverter {
     typealias FfiType = Int8
     typealias SwiftType = Bool
@@ -655,7 +671,7 @@ public protocol ByteStreamReaderProtocol: AnyObject, Sendable {
 open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -673,11 +689,11 @@ open class ByteStreamReader: ByteStreamReaderProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -862,7 +878,7 @@ public protocol ByteStreamWriterProtocol: AnyObject, Sendable {
 open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -880,11 +896,11 @@ open class ByteStreamWriter: ByteStreamWriterProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1056,7 +1072,7 @@ public protocol DataTrackStreamProtocol: AnyObject, Sendable {
 open class DataTrackStream: DataTrackStreamProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1074,11 +1090,11 @@ open class DataTrackStream: DataTrackStreamProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1222,7 +1238,7 @@ public protocol IncomingDataStreamManagerProtocol: AnyObject, Sendable {
 open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1240,11 +1256,11 @@ open class IncomingDataStreamManager: IncomingDataStreamManagerProtocol, @unchec
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1441,7 +1457,7 @@ public protocol IncomingDataStreamManagerDelegate: AnyObject, Sendable {
 open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDelegate, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1459,11 +1475,11 @@ open class IncomingDataStreamManagerDelegateImpl: IncomingDataStreamManagerDeleg
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1724,7 +1740,7 @@ public protocol IncomingStreamQueueProtocol: AnyObject, Sendable {
      * Awaits the next stream opened by a remote participant.
      *
      * Returns `None` once the manager has shut down, which ends the caller's drain loop. Unlike
-     * [`OutgoingPacketQueue::next_packets`] this yields one at a time: each carries a reader the
+     * [`OutgoingPacketQueue::next_batch`] this yields one at a time: each carries a reader the
      * caller has to route to a handler, so batching would only defer that work.
      */
     func nextOpenedStream() async -> OpenedStream?
@@ -1738,7 +1754,7 @@ public protocol IncomingStreamQueueProtocol: AnyObject, Sendable {
 open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1756,11 +1772,11 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1824,7 +1840,7 @@ open class IncomingStreamQueue: IncomingStreamQueueProtocol, @unchecked Sendable
      * Awaits the next stream opened by a remote participant.
      *
      * Returns `None` once the manager has shut down, which ends the caller's drain loop. Unlike
-     * [`OutgoingPacketQueue::next_packets`] this yields one at a time: each carries a reader the
+     * [`OutgoingPacketQueue::next_batch`] this yields one at a time: each carries a reader the
      * caller has to route to a handler, so batching would only defer that work.
      */
     open func nextOpenedStream() async -> OpenedStream? {
@@ -1922,7 +1938,7 @@ public protocol LocalDataTrackProtocol: AnyObject, Sendable {
 open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1940,11 +1956,11 @@ open class LocalDataTrack: LocalDataTrackProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2121,7 +2137,7 @@ public protocol LocalDataTrackManagerProtocol: AnyObject, Sendable {
 open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2139,11 +2155,11 @@ open class LocalDataTrackManager: LocalDataTrackManagerProtocol, @unchecked Send
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2318,7 +2334,7 @@ public protocol LocalDataTrackManagerDelegate: AnyObject, Sendable {
 open class LocalDataTrackManagerDelegateImpl: LocalDataTrackManagerDelegate, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2336,11 +2352,11 @@ open class LocalDataTrackManagerDelegateImpl: LocalDataTrackManagerDelegate, @un
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2528,6 +2544,152 @@ public func FfiConverterTypeLocalDataTrackManagerDelegate_lower(_ value: LocalDa
 }
 
 /**
+ * Reports what happened to the packets of an [`OutgoingPacketBatch`].
+ *
+ * Released without an outcome it fails the send, so dropping a batch can never acknowledge packets
+ * that were not sent.
+ */
+public protocol OutgoingBatchAckProtocol: AnyObject, Sendable {
+    /**
+     * Reports every packet as handed to the transport, resolving the originating send.
+     *
+     * Only the first of [`Self::complete`] and [`Self::fail`] counts.
+     */
+    func complete()
+
+    /**
+     * Reports that the packets could not be delivered, failing the originating send.
+     *
+     * Only the first of [`Self::complete`] and [`Self::fail`] counts.
+     */
+    func fail(reason: String)
+}
+
+/**
+ * Reports what happened to the packets of an [`OutgoingPacketBatch`].
+ *
+ * Released without an outcome it fails the send, so dropping a batch can never acknowledge packets
+ * that were not sent.
+ */
+open class OutgoingBatchAck: OutgoingBatchAckProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_outgoingbatchack(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_outgoingbatchack(handle, $0) }
+    }
+
+    /**
+     * Reports every packet as handed to the transport, resolving the originating send.
+     *
+     * Only the first of [`Self::complete`] and [`Self::fail`] counts.
+     */
+    open func complete() {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_outgoingbatchack_complete(
+                self.uniffiCloneHandle(), $0
+            )
+        }
+    }
+
+    /**
+     * Reports that the packets could not be delivered, failing the originating send.
+     *
+     * Only the first of [`Self::complete`] and [`Self::fail`] counts.
+     */
+    open func fail(reason: String) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_outgoingbatchack_fail(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(reason), $0
+            )
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeOutgoingBatchAck: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = OutgoingBatchAck
+
+    public static func lift(_ handle: UInt64) throws -> OutgoingBatchAck {
+        OutgoingBatchAck(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: OutgoingBatchAck) -> UInt64 {
+        value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> OutgoingBatchAck {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: OutgoingBatchAck, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOutgoingBatchAck_lift(_ handle: UInt64) throws -> OutgoingBatchAck {
+    try FfiConverterTypeOutgoingBatchAck.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOutgoingBatchAck_lower(_ value: OutgoingBatchAck) -> UInt64 {
+    FfiConverterTypeOutgoingBatchAck.lower(value)
+}
+
+/**
  * Sends data streams, choosing v2 single-packet/compression or legacy multi-packet framing based
  * on recipient capabilities. Outbound packets are handed to a foreign delegate for transport.
  */
@@ -2576,7 +2738,7 @@ public protocol OutgoingDataStreamManagerProtocol: AnyObject, Sendable {
 open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2594,11 +2756,11 @@ open class OutgoingDataStreamManager: OutgoingDataStreamManagerProtocol, @unchec
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2804,7 +2966,7 @@ public protocol OutgoingDataStreamManagerDelegate: AnyObject, Sendable {
 open class OutgoingDataStreamManagerDelegateImpl: OutgoingDataStreamManagerDelegate, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -2822,11 +2984,11 @@ open class OutgoingDataStreamManagerDelegateImpl: OutgoingDataStreamManagerDeleg
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3014,38 +3176,43 @@ public func FfiConverterTypeOutgoingDataStreamManagerDelegate_lower(_ value: Out
 }
 
 /**
- * Buffers outbound packets so they can be pulled instead of pushed.
+ * Hands outbound packets to the foreign side one batch at a time.
  *
- * Implements [`OutgoingDataStreamManagerDelegate`] in Rust; see the module docs.
+ * This is the receiving half, held by the foreign side. The manager holds the sending half,
+ * [`OutgoingPacketSink`]. The manager awaits each delegate call before making the next, and each
+ * call waits for its batch's outcome, so at most one batch is pending at a time.
  */
 public protocol OutgoingPacketQueueProtocol: AnyObject, Sendable {
     /**
-     * Wakes a pending [`Self::next_packets`] with `None` so the caller's drain loop can exit.
+     * Wakes a pending [`Self::next_batch`] with `None` so the caller's drain loop can exit, and
+     * fails any send still waiting on a batch.
      *
-     * Call this before releasing the queue: a caller blocked in `next_packets` is holding a
-     * pointer to it, so freeing it first is a use-after-free.
+     * Call this before releasing the queue: a caller blocked in `next_batch` is holding a pointer
+     * to it, so freeing it first is a use-after-free.
      */
     func close()
 
     /**
-     * Awaits the next batch of encoded `livekit.DataPacket`s to put on the wire.
+     * Awaits the next batch of packets to hand to the transport.
      *
-     * Returns `None` once the manager has shut down, which ends the caller's drain loop.
-     * Everything already queued is returned together, so a burst costs one FFI crossing rather
-     * than one per packet.
+     * Report on the batch's `ack` once its packets are sent (or have failed); the next batch
+     * is not produced until then. Returns `None` once the queue is closed, which ends
+     * the caller's drain loop.
      */
-    func nextPackets() async -> [Bytes]?
+    func nextBatch() async -> OutgoingPacketBatch?
 }
 
 /**
- * Buffers outbound packets so they can be pulled instead of pushed.
+ * Hands outbound packets to the foreign side one batch at a time.
  *
- * Implements [`OutgoingDataStreamManagerDelegate`] in Rust; see the module docs.
+ * This is the receiving half, held by the foreign side. The manager holds the sending half,
+ * [`OutgoingPacketSink`]. The manager awaits each delegate call before making the next, and each
+ * call waits for its batch's outcome, so at most one batch is pending at a time.
  */
 open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3063,11 +3230,11 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3094,10 +3261,11 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
     }
 
     /**
-     * Wakes a pending [`Self::next_packets`] with `None` so the caller's drain loop can exit.
+     * Wakes a pending [`Self::next_batch`] with `None` so the caller's drain loop can exit, and
+     * fails any send still waiting on a batch.
      *
-     * Call this before releasing the queue: a caller blocked in `next_packets` is holding a
-     * pointer to it, so freeing it first is a use-after-free.
+     * Call this before releasing the queue: a caller blocked in `next_batch` is holding a pointer
+     * to it, so freeing it first is a use-after-free.
      */
     open func close() {
         try! rustCall {
@@ -3108,23 +3276,23 @@ open class OutgoingPacketQueue: OutgoingPacketQueueProtocol, @unchecked Sendable
     }
 
     /**
-     * Awaits the next batch of encoded `livekit.DataPacket`s to put on the wire.
+     * Awaits the next batch of packets to hand to the transport.
      *
-     * Returns `None` once the manager has shut down, which ends the caller's drain loop.
-     * Everything already queued is returned together, so a burst costs one FFI crossing rather
-     * than one per packet.
+     * Report on the batch's `ack` once its packets are sent (or have failed); the next batch
+     * is not produced until then. Returns `None` once the queue is closed, which ends
+     * the caller's drain loop.
      */
-    open func nextPackets() async -> [Bytes]? {
+    open func nextBatch() async -> OutgoingPacketBatch? {
         try! await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_livekit_ffi_fn_method_outgoingpacketqueue_next_packets(
+                uniffi_livekit_ffi_fn_method_outgoingpacketqueue_next_batch(
                     self.uniffiCloneHandle()
                 )
             },
             pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
             completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterOptionSequenceTypeBytes.lift,
+            liftFunc: FfiConverterOptionTypeOutgoingPacketBatch.lift,
             errorHandler: nil
         )
     }
@@ -3223,7 +3391,7 @@ public protocol RemoteDataTrackProtocol: AnyObject, Sendable {
 open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3241,11 +3409,11 @@ open class RemoteDataTrack: RemoteDataTrackProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3471,7 +3639,7 @@ public protocol RemoteDataTrackManagerProtocol: AnyObject, Sendable {
 open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3489,11 +3657,11 @@ open class RemoteDataTrackManager: RemoteDataTrackManagerProtocol, @unchecked Se
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3674,7 +3842,7 @@ public protocol RemoteDataTrackManagerDelegate: AnyObject, Sendable {
 open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3692,11 +3860,11 @@ open class RemoteDataTrackManagerDelegateImpl: RemoteDataTrackManagerDelegate, @
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3953,7 +4121,7 @@ public protocol RemoteParticipantRegistryDelegate: AnyObject, Sendable {
 open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDelegate, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -3971,11 +4139,11 @@ open class RemoteParticipantRegistryDelegateImpl: RemoteParticipantRegistryDeleg
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4227,7 +4395,7 @@ public protocol SignalEventQueueProtocol: AnyObject, Sendable {
 open class SignalEventQueue: SignalEventQueueProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4245,11 +4413,11 @@ open class SignalEventQueue: SignalEventQueueProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4401,7 +4569,7 @@ public protocol SignalSessionProtocol: AnyObject, Sendable {
 open class SignalSession: SignalSessionProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4419,11 +4587,11 @@ open class SignalSession: SignalSessionProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4649,7 +4817,7 @@ public protocol StreamProgressDelegate: AnyObject, Sendable {
 open class StreamProgressDelegateImpl: StreamProgressDelegate, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4667,11 +4835,11 @@ open class StreamProgressDelegateImpl: StreamProgressDelegate, @unchecked Sendab
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4828,6 +4996,968 @@ public func FfiConverterTypeStreamProgressDelegate_lower(_ value: StreamProgress
 }
 
 /**
+ * Pull-side transport: Rust never calls into the host. The exporter queues each request; the
+ * host awaits [`next`](Self::next) (a Rust future — those cross every binding) or polls
+ * [`try_next`](Self::try_next), performs the HTTP call on its own thread, and reports the
+ * outcome with [`complete`](Self::complete), which unblocks the exporter's retry/drop/go-silent
+ * logic exactly as a direct transport would.
+ *
+ * Exists because uniffi-dart's foreign-trait callbacks are isolate-bound (`Pointer.fromFunction`)
+ * and abort the VM when invoked from a tokio thread; Swift and Kotlin callbacks are thread-agnostic
+ * and use [`TelemetryTransport`] directly. Only [`telemetry_configure_pulled`] makes one.
+ */
+public protocol TelemetryExportQueueProtocol: AnyObject, Sendable {
+    /**
+     * The collector's answer to the request with `id`, whatever its status; the core classifies
+     * it. An unknown or stale `id` (already answered, or given up on) is ignored.
+     */
+    func complete(id: UInt64, response: ExportResponse)
+
+    /**
+     * The request with `id` got no answer (network error, timeout, invalid URL). An unknown or
+     * stale `id` is ignored.
+     */
+    func fail(id: UInt64, error: ExportError)
+
+    /**
+     * End the serving loop: nothing is handed out or queued from now on, and `next` resolves
+     * `None`. Whatever is still queued is discarded, never served: at once, or, while something
+     * else holds the queue (a `next` or `try_next` call, or the queue's own cleanup), when that
+     * holder lets go. A request handed out before this
+     * call stays answerable with `complete` or `fail`, even when the host sees it only after this
+     * returns. Call after `telemetry_shutdown` or `telemetry_disable`, or when a later
+     * `telemetry_configure_pulled` successfully replaced this queue. Keep serving it if the
+     * replacement returns [`TelemetryError::AtCapacity`].
+     * (Not `close`: UniFFI's Kotlin objects already have `AutoCloseable.close`.)
+     */
+    func finish()
+
+    /**
+     * The next request to perform; `None` once finished. A request the exporter already gave up
+     * on (timed out, cancelled by shutdown or the opt-out) is never handed out. A request handed
+     * out just before [`finish`](Self::finish) can reach the caller after it; it stays
+     * answerable.
+     */
+    func next() async -> PendingExport?
+
+    /**
+     * The request waiting right now, if any — without waiting: for hosts that must never leave
+     * a pending Rust future holding one of their continuations (Dart: poll from a `Timer`). A
+     * request nobody polls for still times out and is withdrawn exactly as with
+     * [`next`](Self::next); `None` also once finished, or while a `next` is waiting.
+     */
+    func tryNext() -> PendingExport?
+}
+
+/**
+ * Pull-side transport: Rust never calls into the host. The exporter queues each request; the
+ * host awaits [`next`](Self::next) (a Rust future — those cross every binding) or polls
+ * [`try_next`](Self::try_next), performs the HTTP call on its own thread, and reports the
+ * outcome with [`complete`](Self::complete), which unblocks the exporter's retry/drop/go-silent
+ * logic exactly as a direct transport would.
+ *
+ * Exists because uniffi-dart's foreign-trait callbacks are isolate-bound (`Pointer.fromFunction`)
+ * and abort the VM when invoked from a tokio thread; Swift and Kotlin callbacks are thread-agnostic
+ * and use [`TelemetryTransport`] directly. Only [`telemetry_configure_pulled`] makes one.
+ */
+open class TelemetryExportQueue: TelemetryExportQueueProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_telemetryexportqueue(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_telemetryexportqueue(handle, $0) }
+    }
+
+    /**
+     * The collector's answer to the request with `id`, whatever its status; the core classifies
+     * it. An unknown or stale `id` (already answered, or given up on) is ignored.
+     */
+    open func complete(id: UInt64, response: ExportResponse) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryexportqueue_complete(
+                self.uniffiCloneHandle(),
+                FfiConverterUInt64.lower(id),
+                FfiConverterTypeExportResponse_lower(response), $0
+            )
+        }
+    }
+
+    /**
+     * The request with `id` got no answer (network error, timeout, invalid URL). An unknown or
+     * stale `id` is ignored.
+     */
+    open func fail(id: UInt64, error: ExportError) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryexportqueue_fail(
+                self.uniffiCloneHandle(),
+                FfiConverterUInt64.lower(id),
+                FfiConverterTypeExportError_lower(error), $0
+            )
+        }
+    }
+
+    /**
+     * End the serving loop: nothing is handed out or queued from now on, and `next` resolves
+     * `None`. Whatever is still queued is discarded, never served: at once, or, while something
+     * else holds the queue (a `next` or `try_next` call, or the queue's own cleanup), when that
+     * holder lets go. A request handed out before this
+     * call stays answerable with `complete` or `fail`, even when the host sees it only after this
+     * returns. Call after `telemetry_shutdown` or `telemetry_disable`, or when a later
+     * `telemetry_configure_pulled` successfully replaced this queue. Keep serving it if the
+     * replacement returns [`TelemetryError::AtCapacity`].
+     * (Not `close`: UniFFI's Kotlin objects already have `AutoCloseable.close`.)
+     */
+    open func finish() {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryexportqueue_finish(
+                self.uniffiCloneHandle(), $0
+            )
+        }
+    }
+
+    /**
+     * The next request to perform; `None` once finished. A request the exporter already gave up
+     * on (timed out, cancelled by shutdown or the opt-out) is never handed out. A request handed
+     * out just before [`finish`](Self::finish) can reach the caller after it; it stays
+     * answerable.
+     */
+    open func next() async -> PendingExport? {
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_method_telemetryexportqueue_next(
+                    self.uniffiCloneHandle()
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_livekit_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypePendingExport.lift,
+            errorHandler: nil
+        )
+    }
+
+    /**
+     * The request waiting right now, if any — without waiting: for hosts that must never leave
+     * a pending Rust future holding one of their continuations (Dart: poll from a `Timer`). A
+     * request nobody polls for still times out and is withdrawn exactly as with
+     * [`next`](Self::next); `None` also once finished, or while a `next` is waiting.
+     */
+    open func tryNext() -> PendingExport? {
+        try! FfiConverterOptionTypePendingExport.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryexportqueue_try_next(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTelemetryExportQueue: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = TelemetryExportQueue
+
+    public static func lift(_ handle: UInt64) throws -> TelemetryExportQueue {
+        TelemetryExportQueue(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: TelemetryExportQueue) -> UInt64 {
+        value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TelemetryExportQueue {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: TelemetryExportQueue, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetryExportQueue_lift(_ handle: UInt64) throws -> TelemetryExportQueue {
+    try FfiConverterTypeTelemetryExportQueue.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetryExportQueue_lower(_ value: TelemetryExportQueue) -> UInt64 {
+    FfiConverterTypeTelemetryExportQueue.lower(value)
+}
+
+/**
+ * One Room's telemetry session: its trace, attributes, spans, stats and destination.
+ */
+public protocol TelemetryScopeProtocol: AnyObject, Sendable {
+    /**
+     * The session ended for good (not a reconnect): `lk.room.disconnected`, once; a repeated call
+     * is a no-op until the session starts a new `lk.connect`.
+     */
+    func disconnected(reason: DisconnectReason)
+
+    /**
+     * An SDK event filed under this session.
+     */
+    func emit(event: TelemetryEvent)
+
+    /**
+     * An app event, exported as `custom.<name>` with the room's correlation attributes. Names
+     * and keys up to 128 bytes, values up to 1024, at most 64 attributes, none of the SDK's
+     * keys (`lk.*`, `otel.*`, `code.*`, `session.id`, `error.type`, `network.connection.type`);
+     * anything else is rejected and counted. Values are exported as given: unlike log bodies,
+     * they are not masked for credentials.
+     */
+    func emitCustom(name: String, attributes: [String: String])
+
+    /**
+     * Like [`emit_custom`](Self::emit_custom), preserving boolean, integer, double and string
+     * values. The same core name, key, value and attribute-count limits apply.
+     */
+    func emitCustomTyped(name: String, attributes: [String: AttributeValue])
+
+    /**
+     * A log record filed under this session even without an ambient span. Credentials in it are
+     * masked, as with [`telemetry_log`].
+     */
+    func log(record: LogRecord)
+
+    /**
+     * One peer connection's whole `getStats()` report and its tracks (MediaStreamTrack id →
+     * track sid); the core maps every RTP stream to its track.
+     */
+    func recordPeerStats(report: [RtcStat], tracks: [String: String], timestampNs: UInt64?)
+
+    /**
+     * One track's whole `getStats()` report; `track_id` is its LiveKit identifier (`TR_…`).
+     * The core maps the report (see `record_stats`).
+     */
+    func recordStatsReport(trackId: String, kind: TrackKind, direction: StreamDirection, report: [RtcStat], timestampNs: UInt64?)
+
+    /**
+     * An app correlation attribute on every record this room captures from now on; `None`
+     * removes it. Same limits as `emit_custom`, at most 64 per room.
+     */
+    func setAttribute(key: String, value: String?)
+
+    /**
+     * Like [`set_attribute`](Self::set_attribute), preserving scalar types; `None` removes
+     * the key. Uses the same core validation and capture snapshots: earlier records keep
+     * the value they captured.
+     */
+    func setAttributeTyped(key: String, value: AttributeValue?)
+
+    /**
+     * The room and local participant, on every record this session captures from now on.
+     */
+    func setRoom(room: RoomIdentity)
+
+    /**
+     * The room's server URL and participant token: at connect and with every refreshed token.
+     * Cheap and idempotent. The core derives the ingest URL (LiveKit Cloud only), reads the
+     * grant and expiry, and uploads this room's records with this room's token.
+     */
+    func setServer(url: String, token: String)
+
+    /**
+     * Start a typed span in this session's trace, stamped now; `parent` nests it.
+     */
+    func start(name: SpanName, parent: TelemetrySpan?) -> TelemetrySpan
+
+    /**
+     * When to poll `getStats()` next, in milliseconds; ask after every poll.
+     */
+    func statsPollIntervalMs() -> UInt64
+
+    /**
+     * The subscription failed; `error_type` is the platform's error name.
+     */
+    func subscribeFailed(sid: String, errorType: String)
+
+    /**
+     * Intent to subscribe (autoSubscribe: the remote publish; manual: the call; tracks already
+     * in the room at join: at connect): opens `lk.subscribe`.
+     */
+    func subscribeStarted(track: SpanTrack)
+
+    /**
+     * The server confirmed the subscription. Without an earlier `subscribe_started` this is the
+     * intent (a fallback, measured from here): `lk.subscribe` opens and `stats_poll_interval_ms`
+     * turns fast at once.
+     */
+    func subscribed(track: SpanTrack)
+
+    /**
+     * The session's trace id as 32 hex characters.
+     */
+    func traceId() -> String
+
+    /**
+     * A track left the room (unpublished, unsubscribed, publisher gone): a pending subscribe
+     * ends, the track's last RTC window ships, its state is forgotten.
+     */
+    func trackEnded(sid: String)
+}
+
+/**
+ * One Room's telemetry session: its trace, attributes, spans, stats and destination.
+ */
+open class TelemetryScope: TelemetryScopeProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_telemetryscope(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_telemetryscope(handle, $0) }
+    }
+
+    /**
+     * The session ended for good (not a reconnect): `lk.room.disconnected`, once; a repeated call
+     * is a no-op until the session starts a new `lk.connect`.
+     */
+    open func disconnected(reason: DisconnectReason) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_disconnected(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeDisconnectReason_lower(reason), $0
+            )
+        }
+    }
+
+    /**
+     * An SDK event filed under this session.
+     */
+    open func emit(event: TelemetryEvent) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_emit(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeTelemetryEvent_lower(event), $0
+            )
+        }
+    }
+
+    /**
+     * An app event, exported as `custom.<name>` with the room's correlation attributes. Names
+     * and keys up to 128 bytes, values up to 1024, at most 64 attributes, none of the SDK's
+     * keys (`lk.*`, `otel.*`, `code.*`, `session.id`, `error.type`, `network.connection.type`);
+     * anything else is rejected and counted. Values are exported as given: unlike log bodies,
+     * they are not masked for credentials.
+     */
+    open func emitCustom(name: String, attributes: [String: String]) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_emit_custom(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(name),
+                FfiConverterDictionaryStringString.lower(attributes), $0
+            )
+        }
+    }
+
+    /**
+     * Like [`emit_custom`](Self::emit_custom), preserving boolean, integer, double and string
+     * values. The same core name, key, value and attribute-count limits apply.
+     */
+    open func emitCustomTyped(name: String, attributes: [String: AttributeValue]) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_emit_custom_typed(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(name),
+                FfiConverterDictionaryStringTypeAttributeValue.lower(attributes), $0
+            )
+        }
+    }
+
+    /**
+     * A log record filed under this session even without an ambient span. Credentials in it are
+     * masked, as with [`telemetry_log`].
+     */
+    open func log(record: LogRecord) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_log(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeLogRecord_lower(record), $0
+            )
+        }
+    }
+
+    /**
+     * One peer connection's whole `getStats()` report and its tracks (MediaStreamTrack id →
+     * track sid); the core maps every RTP stream to its track.
+     */
+    open func recordPeerStats(report: [RtcStat], tracks: [String: String], timestampNs: UInt64?) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_record_peer_stats(
+                self.uniffiCloneHandle(),
+                FfiConverterSequenceTypeRtcStat.lower(report),
+                FfiConverterDictionaryStringString.lower(tracks),
+                FfiConverterOptionUInt64.lower(timestampNs), $0
+            )
+        }
+    }
+
+    /**
+     * One track's whole `getStats()` report; `track_id` is its LiveKit identifier (`TR_…`).
+     * The core maps the report (see `record_stats`).
+     */
+    open func recordStatsReport(trackId: String, kind: TrackKind, direction: StreamDirection, report: [RtcStat], timestampNs: UInt64?) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_record_stats_report(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(trackId),
+                FfiConverterTypeTrackKind_lower(kind),
+                FfiConverterTypeStreamDirection_lower(direction),
+                FfiConverterSequenceTypeRtcStat.lower(report),
+                FfiConverterOptionUInt64.lower(timestampNs), $0
+            )
+        }
+    }
+
+    /**
+     * An app correlation attribute on every record this room captures from now on; `None`
+     * removes it. Same limits as `emit_custom`, at most 64 per room.
+     */
+    open func setAttribute(key: String, value: String?) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_set_attribute(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(key),
+                FfiConverterOptionString.lower(value), $0
+            )
+        }
+    }
+
+    /**
+     * Like [`set_attribute`](Self::set_attribute), preserving scalar types; `None` removes
+     * the key. Uses the same core validation and capture snapshots: earlier records keep
+     * the value they captured.
+     */
+    open func setAttributeTyped(key: String, value: AttributeValue?) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_set_attribute_typed(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(key),
+                FfiConverterOptionTypeAttributeValue.lower(value), $0
+            )
+        }
+    }
+
+    /**
+     * The room and local participant, on every record this session captures from now on.
+     */
+    open func setRoom(room: RoomIdentity) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_set_room(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeRoomIdentity_lower(room), $0
+            )
+        }
+    }
+
+    /**
+     * The room's server URL and participant token: at connect and with every refreshed token.
+     * Cheap and idempotent. The core derives the ingest URL (LiveKit Cloud only), reads the
+     * grant and expiry, and uploads this room's records with this room's token.
+     */
+    open func setServer(url: String, token: String) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_set_server(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(url),
+                FfiConverterString.lower(token), $0
+            )
+        }
+    }
+
+    /**
+     * Start a typed span in this session's trace, stamped now; `parent` nests it.
+     */
+    open func start(name: SpanName, parent: TelemetrySpan?) -> TelemetrySpan {
+        try! FfiConverterTypeTelemetrySpan_lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_start(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeSpanName_lower(name),
+                FfiConverterOptionTypeTelemetrySpan.lower(parent), $0
+            )
+        })
+    }
+
+    /**
+     * When to poll `getStats()` next, in milliseconds; ask after every poll.
+     */
+    open func statsPollIntervalMs() -> UInt64 {
+        try! FfiConverterUInt64.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_stats_poll_interval_ms(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * The subscription failed; `error_type` is the platform's error name.
+     */
+    open func subscribeFailed(sid: String, errorType: String) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_subscribe_failed(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(sid),
+                FfiConverterString.lower(errorType), $0
+            )
+        }
+    }
+
+    /**
+     * Intent to subscribe (autoSubscribe: the remote publish; manual: the call; tracks already
+     * in the room at join: at connect): opens `lk.subscribe`.
+     */
+    open func subscribeStarted(track: SpanTrack) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_subscribe_started(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeSpanTrack_lower(track), $0
+            )
+        }
+    }
+
+    /**
+     * The server confirmed the subscription. Without an earlier `subscribe_started` this is the
+     * intent (a fallback, measured from here): `lk.subscribe` opens and `stats_poll_interval_ms`
+     * turns fast at once.
+     */
+    open func subscribed(track: SpanTrack) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_subscribed(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeSpanTrack_lower(track), $0
+            )
+        }
+    }
+
+    /**
+     * The session's trace id as 32 hex characters.
+     */
+    open func traceId() -> String {
+        try! FfiConverterString.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_trace_id(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * A track left the room (unpublished, unsubscribed, publisher gone): a pending subscribe
+     * ends, the track's last RTC window ships, its state is forgotten.
+     */
+    open func trackEnded(sid: String) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryscope_track_ended(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(sid), $0
+            )
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTelemetryScope: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = TelemetryScope
+
+    public static func lift(_ handle: UInt64) throws -> TelemetryScope {
+        TelemetryScope(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: TelemetryScope) -> UInt64 {
+        value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TelemetryScope {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: TelemetryScope, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetryScope_lift(_ handle: UInt64) throws -> TelemetryScope {
+    try FfiConverterTypeTelemetryScope.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetryScope_lower(_ value: TelemetryScope) -> UInt64 {
+    FfiConverterTypeTelemetryScope.lower(value)
+}
+
+/**
+ * One attempt at an SDK operation, owned by the core. Every call is synchronous and stamps the
+ * clock inside, so the only skew is the FFI call; `describe()` is the console line on every
+ * platform. Detached (no session) it still times and describes itself.
+ */
+public protocol TelemetrySpanProtocol: AnyObject, Sendable {
+    /**
+     * End as cancelled: the status stays unset and `lk.outcome` is `cancelled`.
+     */
+    func cancel()
+
+    /**
+     * `None` for a detached span.
+     */
+    func context() -> TraceContext?
+
+    /**
+     * `lk.connect: ws_open +1.49s, …, total 1.83s, ok`
+     */
+    func describe() -> String
+
+    /**
+     * End once; every later call is ignored. `error` becomes `error.type` when the outcome is
+     * `Error`.
+     */
+    func end(outcome: SpanOutcome, error: String?)
+
+    /**
+     * End with an error; `error` becomes `error.type`.
+     */
+    func fail(error: String)
+
+    /**
+     * Whether the span has ended.
+     */
+    func isEnded() -> Bool
+
+    /**
+     * The open bag; replaces an existing key. An app-defined span refuses the SDK's keys.
+     */
+    func setAttribute(key: String, value: AttributeValue)
+
+    /**
+     * The track the operation is about.
+     */
+    func setTrack(track: SpanTrack)
+
+    /**
+     * A checkpoint, stamped now. Ignored once the span has ended.
+     */
+    func step(step: SpanStep)
+
+    /**
+     * Seconds to the end, or to the last step while running.
+     */
+    func totalSecs() -> Double
+}
+
+/**
+ * One attempt at an SDK operation, owned by the core. Every call is synchronous and stamps the
+ * clock inside, so the only skew is the FFI call; `describe()` is the console line on every
+ * platform. Detached (no session) it still times and describes itself.
+ */
+open class TelemetrySpan: TelemetrySpanProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public required init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public init(noHandle _: NoHandle) {
+        handle = 0
+    }
+
+    #if swift(>=5.8)
+        @_documentation(visibility: private)
+    #endif
+    public func uniffiCloneHandle() -> UInt64 {
+        try! rustCall { uniffi_livekit_ffi_fn_clone_telemetryspan(self.handle, $0) }
+    }
+
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_livekit_ffi_fn_free_telemetryspan(handle, $0) }
+    }
+
+    /**
+     * End as cancelled: the status stays unset and `lk.outcome` is `cancelled`.
+     */
+    open func cancel() {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_cancel(
+                self.uniffiCloneHandle(), $0
+            )
+        }
+    }
+
+    /**
+     * `None` for a detached span.
+     */
+    open func context() -> TraceContext? {
+        try! FfiConverterOptionTypeTraceContext.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_context(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * `lk.connect: ws_open +1.49s, …, total 1.83s, ok`
+     */
+    open func describe() -> String {
+        try! FfiConverterString.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_describe(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * End once; every later call is ignored. `error` becomes `error.type` when the outcome is
+     * `Error`.
+     */
+    open func end(outcome: SpanOutcome, error: String?) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_end(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeSpanOutcome_lower(outcome),
+                FfiConverterOptionString.lower(error), $0
+            )
+        }
+    }
+
+    /**
+     * End with an error; `error` becomes `error.type`.
+     */
+    open func fail(error: String) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_fail(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(error), $0
+            )
+        }
+    }
+
+    /**
+     * Whether the span has ended.
+     */
+    open func isEnded() -> Bool {
+        try! FfiConverterBool.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_is_ended(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+
+    /**
+     * The open bag; replaces an existing key. An app-defined span refuses the SDK's keys.
+     */
+    open func setAttribute(key: String, value: AttributeValue) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_set_attribute(
+                self.uniffiCloneHandle(),
+                FfiConverterString.lower(key),
+                FfiConverterTypeAttributeValue_lower(value), $0
+            )
+        }
+    }
+
+    /**
+     * The track the operation is about.
+     */
+    open func setTrack(track: SpanTrack) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_set_track(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeSpanTrack_lower(track), $0
+            )
+        }
+    }
+
+    /**
+     * A checkpoint, stamped now. Ignored once the span has ended.
+     */
+    open func step(step: SpanStep) {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_step(
+                self.uniffiCloneHandle(),
+                FfiConverterTypeSpanStep_lower(step), $0
+            )
+        }
+    }
+
+    /**
+     * Seconds to the end, or to the last step while running.
+     */
+    open func totalSecs() -> Double {
+        try! FfiConverterDouble.lift(try! rustCall {
+            uniffi_livekit_ffi_fn_method_telemetryspan_total_secs(
+                self.uniffiCloneHandle(), $0
+            )
+        })
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTelemetrySpan: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = TelemetrySpan
+
+    public static func lift(_ handle: UInt64) throws -> TelemetrySpan {
+        TelemetrySpan(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: TelemetrySpan) -> UInt64 {
+        value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TelemetrySpan {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: TelemetrySpan, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetrySpan_lift(_ handle: UInt64) throws -> TelemetrySpan {
+    try FfiConverterTypeTelemetrySpan.lift(handle)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetrySpan_lower(_ value: TelemetrySpan) -> UInt64 {
+    FfiConverterTypeTelemetrySpan.lower(value)
+}
+
+/**
  * Reader for an incoming text data stream.
  */
 public protocol TextStreamReaderProtocol: AnyObject, Sendable {
@@ -4878,7 +6008,7 @@ public protocol TextStreamReaderProtocol: AnyObject, Sendable {
 open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -4896,11 +6026,11 @@ open class TextStreamReader: TextStreamReaderProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -5094,7 +6224,7 @@ public protocol TextStreamWriterProtocol: AnyObject, Sendable {
 open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -5112,11 +6242,11 @@ open class TextStreamWriter: TextStreamWriterProtocol, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -6073,6 +7203,138 @@ public func FfiConverterTypeOpenedStream_lift(_ buf: RustBuffer) throws -> Opene
 #endif
 public func FfiConverterTypeOpenedStream_lower(_ value: OpenedStream) -> RustBuffer {
     FfiConverterTypeOpenedStream.lower(value)
+}
+
+/**
+ * One delegate call's worth of outbound packets, pulled by the foreign side.
+ *
+ * The `send_*`/`write` call that produced it stays pending until the foreign side reports on
+ * [`Self::ack`], which keeps the delegate contract: a send resolves only once its packets are
+ * handed to the transport, and a transport failure fails it.
+ */
+public struct OutgoingPacketBatch {
+    /**
+     * Encoded `livekit.DataPacket`s to hand to the transport, in order.
+     */
+    public var packets: [Bytes]
+    /**
+     * Where to report what happened to them.
+     */
+    public var ack: OutgoingBatchAck
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(
+        /*
+         * Encoded `livekit.DataPacket`s to hand to the transport, in order.
+         */ packets: [Bytes],
+        /*
+            * Where to report what happened to them.
+            */ ack: OutgoingBatchAck
+    ) {
+        self.packets = packets
+        self.ack = ack
+    }
+}
+
+#if compiler(>=6)
+    extension OutgoingPacketBatch: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeOutgoingPacketBatch: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> OutgoingPacketBatch {
+        try OutgoingPacketBatch(
+            packets: FfiConverterSequenceTypeBytes.read(from: &buf),
+            ack: FfiConverterTypeOutgoingBatchAck.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: OutgoingPacketBatch, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeBytes.write(value.packets, into: &buf)
+        FfiConverterTypeOutgoingBatchAck.write(value.ack, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOutgoingPacketBatch_lift(_ buf: RustBuffer) throws -> OutgoingPacketBatch {
+    try FfiConverterTypeOutgoingPacketBatch.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOutgoingPacketBatch_lower(_ value: OutgoingPacketBatch) -> RustBuffer {
+    FfiConverterTypeOutgoingPacketBatch.lower(value)
+}
+
+/**
+ * One export the host has to perform on behalf of a pulled pipeline.
+ */
+public struct PendingExport: Equatable, Hashable {
+    /**
+     * What [`TelemetryExportQueue::complete`] and [`TelemetryExportQueue::fail`] take to answer
+     * this request.
+     */
+    public var id: UInt64
+    /**
+     * The request to POST, exactly as given.
+     */
+    public var request: ExportRequest
+
+    /// Default memberwise initializers are never public by default, so we
+    /// declare one manually.
+    public init(
+        /*
+         * What [`TelemetryExportQueue::complete`] and [`TelemetryExportQueue::fail`] take to answer
+         * this request.
+         */ id: UInt64,
+        /*
+            * The request to POST, exactly as given.
+            */ request: ExportRequest
+    ) {
+        self.id = id
+        self.request = request
+    }
+}
+
+#if compiler(>=6)
+    extension PendingExport: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePendingExport: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PendingExport {
+        try PendingExport(
+            id: FfiConverterUInt64.read(from: &buf),
+            request: FfiConverterTypeExportRequest.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PendingExport, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.id, into: &buf)
+        FfiConverterTypeExportRequest.write(value.request, into: &buf)
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypePendingExport_lift(_ buf: RustBuffer) throws -> PendingExport {
+    try FfiConverterTypePendingExport.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypePendingExport_lower(_ value: PendingExport) -> RustBuffer {
+    FfiConverterTypePendingExport.lower(value)
 }
 
 /**
@@ -8276,6 +9538,85 @@ public func FfiConverterTypeSignalRequestError_lower(_ value: SignalRequestError
     FfiConverterTypeSignalRequestError.lower(value)
 }
 
+/**
+ * Why a [`livekit_telemetry::Telemetry`] pipeline could not be created.
+ */
+public enum TelemetryError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+    /**
+     * No transport was passed and no HTTP client is registered with `livekit-net`.
+     */
+    case NoTransport(message: String)
+
+    /**
+     * Three process generations are reserved, queued, running or draining.
+     */
+    case AtCapacity(message: String)
+
+    /**
+     * Lifecycle delivery or acknowledgement failed, so configuration did not report success.
+     */
+    case LifecycleUnavailable(message: String)
+
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+#if compiler(>=6)
+    extension TelemetryError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTelemetryError: FfiConverterRustBuffer {
+    typealias SwiftType = TelemetryError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TelemetryError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        case 1: return try .NoTransport(
+                message: FfiConverterString.read(from: &buf)
+            )
+
+        case 2: return try .AtCapacity(
+                message: FfiConverterString.read(from: &buf)
+            )
+
+        case 3: return try .LifecycleUnavailable(
+                message: FfiConverterString.read(from: &buf)
+            )
+
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TelemetryError, into buf: inout [UInt8]) {
+        switch value {
+        case .NoTransport(_ /* message is ignored*/ ):
+            writeInt(&buf, Int32(1))
+        case .AtCapacity(_ /* message is ignored*/ ):
+            writeInt(&buf, Int32(2))
+        case .LifecycleUnavailable(_ /* message is ignored*/ ):
+            writeInt(&buf, Int32(3))
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetryError_lift(_ buf: RustBuffer) throws -> TelemetryError {
+    try FfiConverterTypeTelemetryError.lift(buf)
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTelemetryError_lower(_ value: TelemetryError) -> RustBuffer {
+    FfiConverterTypeTelemetryError.lower(value)
+}
+
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
@@ -8543,6 +9884,54 @@ private struct FfiConverterOptionTypeStreamProgressDelegate: FfiConverterRustBuf
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterOptionTypeTelemetryScope: FfiConverterRustBuffer {
+    typealias SwiftType = TelemetryScope?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTelemetryScope.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeTelemetryScope.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeTelemetrySpan: FfiConverterRustBuffer {
+    typealias SwiftType = TelemetrySpan?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTelemetrySpan.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeTelemetrySpan.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterOptionTypeTextStreamReader: FfiConverterRustBuffer {
     typealias SwiftType = TextStreamReader?
 
@@ -8559,6 +9948,30 @@ private struct FfiConverterOptionTypeTextStreamReader: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: nil
         case 1: try FfiConverterTypeTextStreamReader.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeTelemetryTransport: FfiConverterRustBuffer {
+    typealias SwiftType = TelemetryTransport?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTelemetryTransport.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeTelemetryTransport.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -8759,6 +10172,54 @@ private struct FfiConverterOptionTypeOpenedStream: FfiConverterRustBuffer {
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterOptionTypeOutgoingPacketBatch: FfiConverterRustBuffer {
+    typealias SwiftType = OutgoingPacketBatch?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeOutgoingPacketBatch.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeOutgoingPacketBatch.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypePendingExport: FfiConverterRustBuffer {
+    typealias SwiftType = PendingExport?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypePendingExport.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypePendingExport.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterOptionTypeRoomConfiguration: FfiConverterRustBuffer {
     typealias SwiftType = RoomConfiguration?
 
@@ -8855,6 +10316,54 @@ private struct FfiConverterOptionTypeVideoGrants: FfiConverterRustBuffer {
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterOptionTypeTelemetryStats: FfiConverterRustBuffer {
+    typealias SwiftType = TelemetryStats?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTelemetryStats.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeTelemetryStats.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterOptionTypeTraceContext: FfiConverterRustBuffer {
+    typealias SwiftType = TraceContext?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTraceContext.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeTraceContext.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterOptionTypeDataTrackFrameEncoding: FfiConverterRustBuffer {
     typealias SwiftType = DataTrackFrameEncoding?
 
@@ -8927,6 +10436,30 @@ private struct FfiConverterOptionTypeSignalEvent: FfiConverterRustBuffer {
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterOptionTypeAttributeValue: FfiConverterRustBuffer {
+    typealias SwiftType = AttributeValue?
+
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeAttributeValue.write(value, into: &buf)
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: nil
+        case 1: try FfiConverterTypeAttributeValue.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterOptionSequenceTypeClientCapability: FfiConverterRustBuffer {
     typealias SwiftType = [ClientCapability]?
 
@@ -8943,30 +10476,6 @@ private struct FfiConverterOptionSequenceTypeClientCapability: FfiConverterRustB
         switch try readInt(&buf) as Int8 {
         case 0: nil
         case 1: try FfiConverterSequenceTypeClientCapability.read(from: &buf)
-        default: throw UniffiInternalError.unexpectedOptionalTag
-        }
-    }
-}
-
-#if swift(>=5.8)
-    @_documentation(visibility: private)
-#endif
-private struct FfiConverterOptionSequenceTypeBytes: FfiConverterRustBuffer {
-    typealias SwiftType = [Bytes]?
-
-    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
-        guard let value else {
-            writeInt(&buf, Int8(0))
-            return
-        }
-        writeInt(&buf, Int8(1))
-        FfiConverterSequenceTypeBytes.write(value, into: &buf)
-    }
-
-    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
-        switch try readInt(&buf) as Int8 {
-        case 0: nil
-        case 1: try FfiConverterSequenceTypeBytes.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -9048,6 +10557,31 @@ private struct FfiConverterSequenceString: FfiConverterRustBuffer {
 #if swift(>=5.8)
     @_documentation(visibility: private)
 #endif
+private struct FfiConverterSequenceTypeTelemetryInstrument: FfiConverterRustBuffer {
+    typealias SwiftType = [TelemetryInstrument]
+
+    static func write(_ value: [TelemetryInstrument], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTelemetryInstrument.write(item, into: &buf)
+        }
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TelemetryInstrument] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TelemetryInstrument]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            try seq.append(FfiConverterTypeTelemetryInstrument.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
 private struct FfiConverterSequenceTypeRoomAgentDispatch: FfiConverterRustBuffer {
     typealias SwiftType = [RoomAgentDispatch]
 
@@ -9065,6 +10599,31 @@ private struct FfiConverterSequenceTypeRoomAgentDispatch: FfiConverterRustBuffer
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             try seq.append(FfiConverterTypeRoomAgentDispatch.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterSequenceTypeRtcStat: FfiConverterRustBuffer {
+    typealias SwiftType = [RtcStat]
+
+    static func write(_ value: [RtcStat], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeRtcStat.write(item, into: &buf)
+        }
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RtcStat] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [RtcStat]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            try seq.append(FfiConverterTypeRtcStat.read(from: &buf))
         }
         return seq
     }
@@ -9140,6 +10699,32 @@ private struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
         for _ in 0 ..< len {
             let key = try FfiConverterString.read(from: &buf)
             let value = try FfiConverterString.read(from: &buf)
+            dict[key] = value
+        }
+        return dict
+    }
+}
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+private struct FfiConverterDictionaryStringTypeAttributeValue: FfiConverterRustBuffer {
+    static func write(_ value: [String: AttributeValue], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for (key, value) in value {
+            FfiConverterString.write(key, into: &buf)
+            FfiConverterTypeAttributeValue.write(value, into: &buf)
+        }
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String: AttributeValue] {
+        let len: Int32 = try readInt(&buf)
+        var dict = [String: AttributeValue]()
+        dict.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            let key = try FfiConverterString.read(from: &buf)
+            let value = try FfiConverterTypeAttributeValue.read(from: &buf)
             dict[key] = value
         }
         return dict
@@ -9423,6 +11008,11 @@ public func polledOutgoingDataStreamManager(registry: RemoteParticipantRegistryD
  *
  * Generally, you will invoke this once early in program execution. However,
  * subsequent invocations are allowed to change the log level.
+ *
+ * Also turns on the telemetry copy of the core's own warnings and errors (see
+ * `telemetry_copy`), whatever `level` is: `level` filters only what is forwarded here. `Off`
+ * forwards nothing to the platform's console; the telemetry copy stays on. Don't pass the
+ * forwarded entries on to `telemetry_log`.
 
  */
 public func logForwardBootstrap(level: LogForwardFilter) {
@@ -9474,6 +11064,254 @@ public func connectSignalSession(url: String, token: String, options: SignalOpti
     )
 }
 
+/**
+ * Start the process pipeline; a previous one is drained and replaced. `transport = None` uses
+ * the HTTP client registered with `livekit-net`, if any. After [`telemetry_disable`] nothing
+ * starts, and a configure that gets as far as installing deletes whatever `config.storage_dir`
+ * still holds.
+ *
+ * Blocks the calling thread until the pipeline is installed: it opens the disk cache in
+ * `config.storage_dir`, starts the core's runtime on the first call, waits for the lifecycle
+ * calls made before it (an opt-out's purge included), and runs the replaced instruments' `stop()`
+ * and the new instruments' `start()` on the core's runtime. Those callbacks must not block, must
+ * not wait on the calling thread (a synchronous hop to its queue deadlocks), and must not call
+ * configure, disable, flush or shutdown. The opt-out takes precedence: after it, this still
+ * returns `Ok` once refusal cleanup is ordered, and no scope exists. Lifecycle delivery failure
+ * returns [`TelemetryError::LifecycleUnavailable`] instead.
+ *
+ * A generation is one accepted process pipeline. At most three are admitted across construction,
+ * queued work, running exporters and drains. [`TelemetryError::AtCapacity`] changes no installed
+ * pipeline, cache or instruments. Controls, external scopes and total memory are not bounded.
+ */
+public func telemetryConfigure(config: TelemetryConfig, transport: TelemetryTransport?, instruments: [TelemetryInstrument]) throws {
+    try rustCallWithError(FfiConverterTypeTelemetryError_lift) {
+        uniffi_livekit_ffi_fn_func_telemetry_configure(
+            FfiConverterTypeTelemetryConfig_lower(config),
+            FfiConverterOptionTypeTelemetryTransport.lower(transport),
+            FfiConverterSequenceTypeTelemetryInstrument.lower(instruments), $0
+        )
+    }
+}
+
+/**
+ * Like [`telemetry_configure`], exporting through a queue the host drains from its own thread.
+ * For bindings whose callbacks cannot be invoked from Rust threads (uniffi-dart today): such a
+ * host passes no `instruments` — it starts and stops its own around configure and disable, so
+ * Rust never calls back into it — and polls the queue with
+ * [`try_next`](TelemetryExportQueue::try_next). Blocks the calling thread as
+ * [`telemetry_configure`] does.
+ *
+ * This return is fallible. On [`TelemetryError::AtCapacity`], keep servicing previous queues.
+ * The rejected replacement creates no queue and changes no installed pipeline. Only opt-out
+ * refusal returns an already finished queue successfully.
+ */
+public func telemetryConfigurePulled(config: TelemetryConfig, instruments: [TelemetryInstrument]) throws -> TelemetryExportQueue {
+    try FfiConverterTypeTelemetryExportQueue_lift(rustCallWithError(FfiConverterTypeTelemetryError_lift) {
+        uniffi_livekit_ffi_fn_func_telemetry_configure_pulled(
+            FfiConverterTypeTelemetryConfig_lower(config),
+            FfiConverterSequenceTypeTelemetryInstrument.lower(instruments), $0
+        )
+    })
+}
+
+/**
+ * Audio route, interruption, denied permission: a process-level record built by the core.
+ */
+public func telemetryDeviceEvent(event: DeviceEvent) {
+    try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_device_event(
+            FfiConverterTypeDeviceEvent_lower(event), $0
+        )
+    }
+}
+
+/**
+ * The stats as one line for a debug console, or `off`.
+ */
+public func telemetryDiagnostics() -> String {
+    try! FfiConverterString.lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_diagnostics($0)
+    })
+}
+
+/**
+ * Opt-out for the rest of the process, in effect when this returns: no scope is handed out,
+ * every existing scope and instrument captures nothing, and later configures are refused.
+ * Everything not yet sent — queued, open, cached on disk — is then deleted in the background
+ * without another upload (awaited by [`telemetry_shutdown`] and [`telemetry_flush`]). Data
+ * already sent cannot be recalled.
+ *
+ * Pulled exports ([`TelemetryExportQueue`]): a hand-out that starts after this call returned
+ * gives the host nothing. A hand-out whose check ran before the opt-out is committed: its
+ * request can reach the host while or after this call returns, and the core cannot take it back.
+ * The opt-out does not wait for its answer; the purge cancels the exporter that waits for it and
+ * deletes the batch, whatever the host answers. A host that must not upload after its own
+ * opt-out checks [`telemetry_is_disabled`] right before each send, on the thread or under the
+ * lock that also makes its call to this function, and drops the request when it is `true`.
+ *
+ * The installed instruments' `stop()` runs synchronously on the calling thread, under the
+ * lifecycle lock, before this returns: it must not block on the caller's queue and must not
+ * call back into configure, disable, flush or shutdown.
+ */
+public func telemetryDisable() {
+    try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_disable($0)
+    }
+}
+
+/**
+ * The protocol's `DisconnectReason` number as the shared enum.
+ */
+public func telemetryDisconnectReason(proto: Int32) -> DisconnectReason {
+    try! FfiConverterTypeDisconnectReason_lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_disconnect_reason(
+            FfiConverterInt32.lower(proto), $0
+        )
+    })
+}
+
+/**
+ * A process-level event (outside any room).
+ */
+public func telemetryEmit(event: TelemetryEvent) {
+    try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_emit(
+            FfiConverterTypeTelemetryEvent_lower(event), $0
+        )
+    }
+}
+
+/**
+ * Cache everything queued and upload what the network allows. After [`telemetry_disable`],
+ * returns once its purge is complete.
+ */
+public func telemetryFlush() async {
+    return
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_func_telemetry_flush(
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: nil
+        )
+}
+
+/**
+ * Whether the process opted out with [`telemetry_disable`]: `true` for every thread and isolate
+ * from the moment that call revokes collection, before it returns. A cheap read that never
+ * panics; platforms with per-isolate state may check it right before each `getStats` or submit.
+ */
+public func telemetryIsDisabled() -> Bool {
+    try! FfiConverterBool.lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_is_disabled($0)
+    })
+}
+
+/**
+ * A captured log line; the core applies the per-source floor and builds the record. For the
+ * platform's own and WebRTC's lines only — never a Rust entry received through the log
+ * forwarder, which the core has already copied (`log_forward_bootstrap`). Credentials in the
+ * line (a compact JWT, the value after `Bearer` or a `token` key) are masked, as in the core's
+ * own copied lines. Only log bodies are masked: event bodies and attributes (`telemetry_emit`,
+ * `emit_custom`, `set_attribute`, span attributes) are exported as given. While telemetry is
+ * off the line is dropped unread: no masking, no copy.
+ */
+public func telemetryLog(record: LogRecord) {
+    try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_log(
+            FfiConverterTypeLogRecord_lower(record), $0
+        )
+    }
+}
+
+/**
+ * The protocol's `ReconnectReason` number (`RR_*`) as the shared enum.
+ */
+public func telemetryReconnectReason(proto: Int32) -> TelemetryReconnectReason {
+    try! FfiConverterTypeTelemetryReconnectReason_lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_reconnect_reason(
+            FfiConverterInt32.lower(proto), $0
+        )
+    })
+}
+
+/**
+ * A scope — one room, one call — on the process pipeline; `None` while telemetry is off.
+ */
+public func telemetryScope() -> TelemetryScope? {
+    try! FfiConverterOptionTypeTelemetryScope.lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_scope($0)
+    })
+}
+
+/**
+ * SDK metadata added at export to every record of every scope (not an app API: app
+ * attributes are room-scoped, [`TelemetryScope::set_attribute`]); `None` removes it. Keys up to
+ * 128 bytes, values up to 1024, at most 64 keys, never `session.id`, `error.type` or
+ * `lk.outcome`; anything else is rejected and counted.
+ */
+public func telemetrySetAttribute(key: String, value: AttributeValue?) {
+    try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_set_attribute(
+            FfiConverterString.lower(key),
+            FfiConverterOptionTypeAttributeValue.lower(value), $0
+        )
+    }
+}
+
+/**
+ * The device's current state; drives the upload cadence and yields change events.
+ */
+public func telemetrySetDeviceState(state: DeviceState) {
+    try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_set_device_state(
+            FfiConverterTypeDeviceState_lower(state), $0
+        )
+    }
+}
+
+/**
+ * Drain and stop the process pipeline; every call is a no-op afterwards. After
+ * [`telemetry_disable`], returns once its purge is complete. Returns once every exporter
+ * started before the call has stopped as well: each drains within its pipeline's shutdown bound
+ * (its export timeout plus 1 s) or is cancelled there, so right after a replace this waits one
+ * bound for each pipeline still in line. A shutdown that is the last call ends the lifecycle
+ * and joins it; the next configure starts a fresh one.
+ *
+ * The bounds are cooperative: a transport, instrument or disk call that blocks instead of
+ * yielding can make the wait longer. What did not go out stays in the cache. A disk cache
+ * (`storage_dir`) sends it on a later launch, once a room of the same project passes a fresh
+ * token, within the cache's 24 h age limit. Memory-only data lasts while a cache owner remains;
+ * a normal completed drain can release that owner before process exit.
+ */
+public func telemetryShutdown() async {
+    return
+        try! await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_livekit_ffi_fn_func_telemetry_shutdown(
+                )
+            },
+            pollFunc: ffi_livekit_ffi_rust_future_poll_void,
+            completeFunc: ffi_livekit_ffi_rust_future_complete_void,
+            freeFunc: ffi_livekit_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: nil
+        )
+}
+
+/**
+ * Pipeline health (drops by reason, uploads, backlog); `None` while telemetry is off.
+ */
+public func telemetryStats() -> TelemetryStats? {
+    try! FfiConverterOptionTypeTelemetryStats.lift(try! rustCall {
+        uniffi_livekit_ffi_fn_func_telemetry_stats($0)
+    })
+}
+
 private enum InitializationResult {
     case ok
     case contractVersionMismatch
@@ -9508,13 +11346,61 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_func_polled_outgoing_data_stream_manager() != 31857 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_func_log_forward_bootstrap() != 57935 {
+    if uniffi_livekit_ffi_checksum_func_log_forward_bootstrap() != 61245 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_func_log_forward_receive() != 7577 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_func_connect_signal_session() != 41195 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_configure() != 41119 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_configure_pulled() != 17591 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_device_event() != 33721 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_diagnostics() != 46360 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_disable() != 30376 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_disconnect_reason() != 15772 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_emit() != 63210 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_flush() != 929 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_is_disabled() != 40492 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_log() != 384 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_reconnect_reason() != 25237 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_scope() != 15360 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_set_attribute() != 2407 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_set_device_state() != 22387 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_shutdown() != 7250 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_func_telemetry_stats() != 37490 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_bytestreamreader_close() != 35013 {
@@ -9634,13 +11520,19 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_incomingstreamqueue_next_closed_stream() != 44106 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_incomingstreamqueue_next_opened_stream() != 43280 {
+    if uniffi_livekit_ffi_checksum_method_incomingstreamqueue_next_opened_stream() != 34186 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_close() != 60144 {
+    if uniffi_livekit_ffi_checksum_method_outgoingbatchack_complete() != 64568 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_next_packets() != 3004 {
+    if uniffi_livekit_ffi_checksum_method_outgoingbatchack_fail() != 12570 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_close() != 45512 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_next_batch() != 36839 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_localdatatrack_info() != 29037 {
@@ -9754,6 +11646,105 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_signalsession_token() != 61772 {
         return InitializationResult.apiChecksumMismatch
     }
+    if uniffi_livekit_ffi_checksum_method_telemetryexportqueue_complete() != 29969 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryexportqueue_fail() != 60767 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryexportqueue_finish() != 27908 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryexportqueue_next() != 63764 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryexportqueue_try_next() != 27050 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_disconnected() != 41241 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_emit() != 11531 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_emit_custom() != 47267 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_emit_custom_typed() != 16037 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_log() != 19346 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_record_peer_stats() != 19222 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_record_stats_report() != 14068 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_set_attribute() != 51038 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_set_attribute_typed() != 54870 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_set_room() != 38539 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_set_server() != 62144 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_start() != 39235 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_stats_poll_interval_ms() != 28012 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_subscribe_failed() != 34561 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_subscribe_started() != 45599 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_subscribed() != 8621 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_trace_id() != 52068 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryscope_track_ended() != 2751 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_cancel() != 38624 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_context() != 7556 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_describe() != 26812 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_end() != 45380 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_fail() != 48021 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_is_ended() != 21652 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_set_attribute() != 17489 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_set_track() != 32279 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_step() != 6797 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_telemetryspan_total_secs() != 27252 {
+        return InitializationResult.apiChecksumMismatch
+    }
     if uniffi_livekit_ffi_checksum_constructor_incomingdatastreammanager_new() != 34777 {
         return InitializationResult.apiChecksumMismatch
     }
@@ -9775,6 +11766,7 @@ private let initializationResult: InitializationResult = {
     uniffiCallbackInitStreamProgressDelegate()
     uniffiEnsureLivekitCommonInitialized()
     uniffiEnsureLivekitDatatrackInitialized()
+    uniffiEnsureLivekitTelemetryInitialized()
     return InitializationResult.ok
 }()
 

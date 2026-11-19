@@ -517,7 +517,7 @@ public protocol DecryptionProvider: AnyObject, Sendable {
 open class DecryptionProviderImpl: DecryptionProvider, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -535,11 +535,11 @@ open class DecryptionProviderImpl: DecryptionProvider, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -715,7 +715,7 @@ public protocol EncryptionProvider: AnyObject, Sendable {
 open class EncryptionProviderImpl: EncryptionProvider, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -733,11 +733,11 @@ open class EncryptionProviderImpl: EncryptionProvider, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
