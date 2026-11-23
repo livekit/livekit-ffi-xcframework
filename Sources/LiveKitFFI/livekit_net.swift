@@ -580,7 +580,7 @@ public protocol HttpClient: AnyObject, Sendable {
 open class HttpClientImpl: HttpClient, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -598,11 +598,11 @@ open class HttpClientImpl: HttpClient, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -808,7 +808,7 @@ public protocol WsClient: AnyObject, Sendable {
 open class WsClientImpl: WsClient, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -826,11 +826,11 @@ open class WsClientImpl: WsClient, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1043,7 +1043,7 @@ public protocol WsConnection: AnyObject, Sendable {
 open class WsConnectionImpl: WsConnection, @unchecked Sendable {
     fileprivate let handle: UInt64
 
-    // Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
@@ -1061,11 +1061,11 @@ open class WsConnectionImpl: WsConnection, @unchecked Sendable {
         self.handle = handle
     }
 
-    // This constructor can be used to instantiate a fake object.
-    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
-    //
-    // - Warning:
-    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+    /// This constructor can be used to instantiate a fake object.
+    /// - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    ///
+    /// - Warning:
+    ///     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
     #if swift(>=5.8)
         @_documentation(visibility: private)
     #endif
