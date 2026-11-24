@@ -1061,7 +1061,17 @@ public func FfiConverterTypeByteStreamWriter_lower(_ value: ByteStreamWriter) ->
  */
 public protocol DataTrackStreamProtocol: AnyObject, Sendable {
     /**
-     * Returns the next received frame or `None` if the subscription has ended.
+     * Stops reading the stream and drops it, which ends the subscription once no other stream
+     * of the track remains.
+     *
+     * A pending or later `next()` returns `None`. Idempotent, and returns at once, so it is safe
+     * to call from a cancellation handler.
+     */
+    func close()
+
+    /**
+     * Returns the next received frame, or `None` once the subscription has ended or the stream
+     * was closed.
      */
     func next() async -> DataTrackFrame?
 }
@@ -1121,7 +1131,23 @@ open class DataTrackStream: DataTrackStreamProtocol, @unchecked Sendable {
     }
 
     /**
-     * Returns the next received frame or `None` if the subscription has ended.
+     * Stops reading the stream and drops it, which ends the subscription once no other stream
+     * of the track remains.
+     *
+     * A pending or later `next()` returns `None`. Idempotent, and returns at once, so it is safe
+     * to call from a cancellation handler.
+     */
+    open func close() {
+        try! rustCall {
+            uniffi_livekit_ffi_fn_method_datatrackstream_close(
+                self.uniffiCloneHandle(), $0
+            )
+        }
+    }
+
+    /**
+     * Returns the next received frame, or `None` once the subscription has ended or the stream
+     * was closed.
      */
     open func next() async -> DataTrackFrame? {
         try! await uniffiRustCallAsync(
@@ -1182,7 +1208,7 @@ public func FfiConverterTypeDataTrackStream_lower(_ value: DataTrackStream) -> U
  * Receives inbound data-stream packets and processes them on the incoming manager's actor loop,
  * surfacing opened readers through a foreign delegate.
  *
- * Mirrors [`crate::data_track::remote::RemoteDataTrackManager`]: `handle_packet_received` is a
+ * Mirrors [`crate::data_track_manager::remote::RemoteDataTrackManager`]: `handle_packet_received` is a
  * cheap synchronous enqueue (safe to call from a native data-channel callback), while
  * decompression and reassembly happen on the spawned `run` task in packet order.
  */
@@ -1231,7 +1257,7 @@ public protocol IncomingDataStreamManagerProtocol: AnyObject, Sendable {
  * Receives inbound data-stream packets and processes them on the incoming manager's actor loop,
  * surfacing opened readers through a foreign delegate.
  *
- * Mirrors [`crate::data_track::remote::RemoteDataTrackManager`]: `handle_packet_received` is a
+ * Mirrors [`crate::data_track_manager::remote::RemoteDataTrackManager`]: `handle_packet_received` is a
  * cheap synchronous enqueue (safe to call from a native data-channel callback), while
  * decompression and reassembly happen on the spawned `run` task in packet order.
  */
@@ -7440,6 +7466,8 @@ public func FfiConverterTypePolledOutgoingDataStreamManager_lower(_ value: Polle
 /**
  * FFI wrapper around [`livekit_datatrack::api::RemoteDataTrackPipelineOptions`]. The underlying
  * type uses the builder pattern with private fields.
+ *
+ * An unset field takes the core type's default, so that value lives only in `livekit-datatrack`.
 
  */
 public struct RemoteDataTrackPipelineOptions: Equatable, Hashable {
@@ -7450,7 +7478,7 @@ public struct RemoteDataTrackPipelineOptions: Equatable, Hashable {
      * additional buffering. Zero is clamped to one.
 
      */
-    public var maxPartialFrames: UInt32
+    public var maxPartialFrames: UInt32?
 
     /// Default memberwise initializers are never public by default, so we
     /// declare one manually.
@@ -7461,7 +7489,7 @@ public struct RemoteDataTrackPipelineOptions: Equatable, Hashable {
          * Higher values give more out-of-order tolerance for high-frequency senders at the cost of
          * additional buffering. Zero is clamped to one.
 
-         */ maxPartialFrames: UInt32 = UInt32(1)
+         */ maxPartialFrames: UInt32? = nil
     ) {
         self.maxPartialFrames = maxPartialFrames
     }
@@ -7477,12 +7505,12 @@ public struct RemoteDataTrackPipelineOptions: Equatable, Hashable {
 public struct FfiConverterTypeRemoteDataTrackPipelineOptions: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RemoteDataTrackPipelineOptions {
         try RemoteDataTrackPipelineOptions(
-            maxPartialFrames: FfiConverterUInt32.read(from: &buf)
+            maxPartialFrames: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
 
     public static func write(_ value: RemoteDataTrackPipelineOptions, into buf: inout [UInt8]) {
-        FfiConverterUInt32.write(value.maxPartialFrames, into: &buf)
+        FfiConverterOptionUInt32.write(value.maxPartialFrames, into: &buf)
     }
 }
 
@@ -11535,88 +11563,49 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_outgoingpacketqueue_next_batch() != 36839 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrack_info() != 29037 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_handle_sfu_publish_response() != 39545 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrack_is_published() != 28961 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_handle_sfu_request_response() != 52450 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrack_try_push() != 43389 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_publish_responses_for_sync_state() != 16282 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrack_unpublish() != 47315 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_publish_track() != 62478 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrack_wait_for_unpublish() != 50113 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_republish_tracks() != 40404 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_handle_sfu_publish_response() != 20082 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanagerdelegate_on_signal_request() != 37851 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_handle_sfu_request_response() != 7714 {
+    if uniffi_livekit_ffi_checksum_method_localdatatrackmanagerdelegate_on_packets_available() != 55631 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_publish_responses_for_sync_state() != 11866 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_packet_received() != 29166 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_publish_track() != 53784 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_sfu_join_response() != 8551 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanager_republish_tracks() != 33617 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_sfu_participant_update() != 18907 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanagerdelegate_on_signal_request() != 42335 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_subscriber_handles() != 59608 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_localdatatrackmanagerdelegate_on_packets_available() != 22604 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_resend_subscription_updates() != 40975 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_datatrackstream_next() != 39825 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_signal_request() != 20111 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_info() != 23075 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_published() != 3956 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_is_published() != 58218 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_publisher_identity() != 47854 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_set_pipeline_options() != 61001 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_subscribe() != 8594 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_subscribe_with_options() != 19634 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrack_wait_for_unpublish() != 45106 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_packet_received() != 23983 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_sfu_join_response() != 47161 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_sfu_participant_update() != 57960 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_handle_subscriber_handles() != 8501 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanager_resend_subscription_updates() != 64037 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_signal_request() != 11017 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_published() != 12905 {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_unpublished() != 9643 {
+    if uniffi_livekit_ffi_checksum_method_remotedatatrackmanagerdelegate_on_track_unpublished() != 35485 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_method_signaleventqueue_next_event() != 5226 {
@@ -11745,16 +11734,58 @@ private let initializationResult: InitializationResult = {
     if uniffi_livekit_ffi_checksum_method_telemetryspan_total_secs() != 27252 {
         return InitializationResult.apiChecksumMismatch
     }
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_info() != 63835 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_is_published() != 64013 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_try_push() != 33109 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_unpublish() != 60358 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_localdatatrack_wait_for_unpublish() != 19943 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_datatrackstream_close() != 7243 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_datatrackstream_next() != 3503 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_info() != 40956 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_is_published() != 15025 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_publisher_identity() != 64796 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_set_pipeline_options() != 8653 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_subscribe() != 26519 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_subscribe_with_options() != 4478 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_livekit_ffi_checksum_method_remotedatatrack_wait_for_unpublish() != 12294 {
+        return InitializationResult.apiChecksumMismatch
+    }
     if uniffi_livekit_ffi_checksum_constructor_incomingdatastreammanager_new() != 34777 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_livekit_ffi_checksum_constructor_outgoingdatastreammanager_new() != 38588 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_constructor_localdatatrackmanager_new() != 27273 {
+    if uniffi_livekit_ffi_checksum_constructor_localdatatrackmanager_new() != 18586 {
         return InitializationResult.apiChecksumMismatch
     }
-    if uniffi_livekit_ffi_checksum_constructor_remotedatatrackmanager_new() != 46295 {
+    if uniffi_livekit_ffi_checksum_constructor_remotedatatrackmanager_new() != 47795 {
         return InitializationResult.apiChecksumMismatch
     }
 
